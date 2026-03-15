@@ -17,7 +17,7 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
         <ChevronLeft size={16} /> 返回列表
       </Link>
       <h1 className="text-2xl font-bold text-white mb-6">編輯作品</h1>
-      <ProjectForm project={project} action={(formData) => updateProject(id, formData)} />
+      <ProjectForm project={project} action={updateProject.bind(null, id)} />
     </div>
   )
 }
