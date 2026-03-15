@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Logo from "@/components/Logo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -64,6 +65,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
+        <header className="fixed top-0 left-0 z-50 px-6 py-4">
+          <Logo />
+        </header>
         {children}
       </body>
     </html>
