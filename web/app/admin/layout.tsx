@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import { createAnonClient } from '@/lib/supabase/server'
 import { signOut } from './actions'
 import Link from 'next/link'
@@ -7,7 +6,9 @@ import { LayoutGrid, MessageSquare, LogOut } from 'lucide-react'
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createAnonClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/admin/login')
+
+  // Login page: no sidebar needed, middleware handles access control
+  if (!user) return <>{children}</>
 
   return (
     <div className="min-h-screen bg-zinc-950 flex">
