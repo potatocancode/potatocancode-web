@@ -1,15 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Project, Service, Inquiry } from './types'
 
-type Database = {
-  public: {
-    Tables: {
-      projects: { Row: Project; Insert: Omit<Project, 'id' | 'created_at'>; Update: Partial<Project> }
-      services: { Row: Service; Insert: Omit<Service, 'id' | 'created_at'>; Update: Partial<Service> }
-      inquiries: { Row: Inquiry; Insert: Omit<Inquiry, 'id' | 'created_at'>; Update: Partial<Inquiry> }
-    }
-  }
-}
+// Re-export types for use across the app
+export type { Project, Service, Inquiry }
 
 // Guard against malformed placeholder URLs (e.g., https://<your-ref>.supabase.co)
 function resolveUrl(raw: string | undefined): string {
@@ -24,4 +17,6 @@ function resolveUrl(raw: string | undefined): string {
 const supabaseUrl = resolveUrl(process.env.NEXT_PUBLIC_SUPABASE_URL)
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+// Using untyped client to avoid GenericTable constraint changes in @supabase/supabase-js v2.99+
+// Types are enforced at the call site via types.ts
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
