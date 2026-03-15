@@ -1,7 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
-import { deleteProject } from '../actions'
 import Link from 'next/link'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil } from 'lucide-react'
+import DeleteButton from './DeleteButton'
 
 const CATEGORY_BADGE: Record<string, string> = {
   Web: 'bg-cyan-500/10 text-cyan-300',
@@ -54,13 +54,7 @@ export default async function AdminProjectsPage() {
                   className="p-2 rounded-lg border border-zinc-700 text-zinc-400 hover:border-indigo-500 hover:text-indigo-400 transition-colors">
                   <Pencil size={14} />
                 </Link>
-                <form action={async () => { 'use server'; await deleteProject(p.id) }}>
-                  <button type="submit"
-                    className="p-2 rounded-lg border border-zinc-700 text-zinc-400 hover:border-red-500 hover:text-red-400 transition-colors"
-                    onClick={(e) => { if (!confirm(`確定刪除「${p.title}」？`)) e.preventDefault() }}>
-                    <Trash2 size={14} />
-                  </button>
-                </form>
+                <DeleteButton id={p.id} title={p.title} />
               </div>
             </div>
           ))}
