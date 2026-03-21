@@ -1,8 +1,9 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ExternalLink, Github, Layers } from 'lucide-react'
+import { ExternalLink, Github, Layers, ArrowRight } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import type { Project } from '@/lib/supabase/types'
 
 const CATEGORY_COLORS: Record<Project['category'], string> = {
@@ -16,13 +17,13 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
-  const { title, description, tech_stack, cover_image_url, demo_link, github_link, category } = project
+  const { title, description, tech_stack, cover_image_url, demo_link, github_link, category, slug } = project
 
-  return (
+  const cardContent = (
     <motion.div
       whileHover={{ y: -4, scale: 1.01 }}
       transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-      className="group flex flex-col rounded-xl border border-zinc-800 bg-zinc-900 overflow-hidden hover:border-indigo-500/50 transition-colors"
+      className="group flex flex-col rounded-xl border border-zinc-800 bg-zinc-900 overflow-hidden hover:border-indigo-500/50 transition-colors h-full"
     >
       {/* Cover image */}
       <div className="relative h-48 w-full bg-zinc-800 overflow-hidden">
@@ -49,7 +50,12 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
       {/* Content */}
       <div className="flex flex-col flex-1 p-5 gap-3">
-        <h3 className="text-lg font-bold text-white">{title}</h3>
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-lg font-bold text-white">{title}</h3>
+          {slug && (
+            <ArrowRight size={16} className="shrink-0 mt-1 text-zinc-600 group-hover:text-indigo-400 transition-colors" />
+          )}
+        </div>
 
         <p className="text-sm text-zinc-400 line-clamp-2">{description}</p>
 
@@ -72,6 +78,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               href={demo_link}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
               className="inline-flex items-center gap-1.5 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
             >
               <ExternalLink size={14} />
@@ -83,6 +90,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               href={github_link}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
               className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white transition-colors"
             >
               <Github size={14} />
@@ -93,4 +101,14 @@ export default function ProjectCard({ project }: ProjectCardProps) {
       </div>
     </motion.div>
   )
+
+  if (slug) {
+    return (
+      <Link href={`/portfolio/${slug}`} className="block">
+        {cardContent}
+      </Link>
+    )
+  }
+
+  return cardContent
 }

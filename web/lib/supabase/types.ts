@@ -2,15 +2,24 @@ export type ProjectCategory = 'Web' | 'App' | 'System'
 
 export type InquiryStatus = 'Pending' | 'Contacted' | 'Finished'
 
+export interface MediaItem {
+  url: string
+  type: 'image' | 'video'
+  caption?: string
+}
+
 export interface Project {
   id: string
   title: string
-  description: string // Markdown
+  description: string // Markdown short summary
   tech_stack: string[]
   cover_image_url: string | null
   demo_link: string | null
   github_link: string | null
   category: ProjectCategory
+  slug: string | null
+  detailed_description: string | null // Markdown long-form content
+  media_gallery: MediaItem[] | null
   created_at?: string
 }
 

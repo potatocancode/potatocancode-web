@@ -46,6 +46,9 @@ export async function createProject(formData: FormData) {
   const coverImageUrl = await uploadCover(formData.get('cover_image') as File)
   const techStack = (formData.get('tech_stack') as string)
     .split(',').map(t => t.trim()).filter(Boolean)
+  const slug = (formData.get('slug') as string).trim() || null
+  const mediaGalleryRaw = formData.get('media_gallery') as string
+  const mediaGallery = mediaGalleryRaw ? JSON.parse(mediaGalleryRaw) : []
 
   const { error } = await service.from('projects').insert({
     title: formData.get('title') as string,
@@ -55,11 +58,15 @@ export async function createProject(formData: FormData) {
     cover_image_url: coverImageUrl,
     demo_link: (formData.get('demo_link') as string) || null,
     github_link: (formData.get('github_link') as string) || null,
+    slug,
+    detailed_description: (formData.get('detailed_description') as string) || null,
+    media_gallery: mediaGallery,
   })
   if (error) return { error: error.message }
 
   revalidatePath('/admin/projects')
   revalidatePath('/portfolio')
+  if (slug) revalidatePath(`/portfolio/${slug}`)
   redirect('/admin/projects')
 }
 
@@ -68,6 +75,9 @@ export async function updateProject(id: string, formData: FormData) {
   const newCoverUrl = await uploadCover(formData.get('cover_image') as File)
   const techStack = (formData.get('tech_stack') as string)
     .split(',').map(t => t.trim()).filter(Boolean)
+  const slug = (formData.get('slug') as string).trim() || null
+  const mediaGalleryRaw = formData.get('media_gallery') as string
+  const mediaGallery = mediaGalleryRaw ? JSON.parse(mediaGalleryRaw) : []
 
   const patch: Record<string, unknown> = {
     title: formData.get('title') as string,
@@ -76,6 +86,9 @@ export async function updateProject(id: string, formData: FormData) {
     tech_stack: techStack,
     demo_link: (formData.get('demo_link') as string) || null,
     github_link: (formData.get('github_link') as string) || null,
+    slug,
+    detailed_description: (formData.get('detailed_description') as string) || null,
+    media_gallery: mediaGallery,
   }
   if (newCoverUrl) patch.cover_image_url = newCoverUrl
 
@@ -84,6 +97,7 @@ export async function updateProject(id: string, formData: FormData) {
 
   revalidatePath('/admin/projects')
   revalidatePath('/portfolio')
+  if (slug) revalidatePath(`/portfolio/${slug}`)
   redirect('/admin/projects')
 }
 

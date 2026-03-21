@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Terminal, Code2, Layers, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
 
 const TAGLINE = 'PotatoCanCode Studio'
 const SUB = '從設計到部署的全方位客製化解決方案'
@@ -84,14 +85,14 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.45 }}
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
-          <a
+          <Link
             href="/portfolio"
             className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-colors"
           >
             <Layers size={18} />
             查看作品集
             <ArrowRight size={16} />
-          </a>
+          </Link>
           <a
             href="/contact"
             className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-lg border border-zinc-600 hover:border-indigo-500 text-zinc-300 hover:text-white font-semibold transition-colors"
