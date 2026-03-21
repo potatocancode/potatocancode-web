@@ -211,7 +211,7 @@ export default async function ProjectDetailPage(
 
         {/* Tech stack */}
         <div className="flex flex-wrap gap-2 mb-10">
-          {tech_stack.map((tech) => (
+          {(tech_stack as string[]).map((tech: string) => (
             <span
               key={tech}
               className="px-3 py-1 rounded-lg text-sm font-mono bg-zinc-800 border border-zinc-700 text-zinc-300"
