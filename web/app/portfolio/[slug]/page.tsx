@@ -136,8 +136,10 @@ export default async function ProjectDetailPage(
   const project = await getProject(slug)
   if (!project) notFound()
 
-  const { title, description, category, tech_stack, cover_image_url,
-    demo_link, github_link, detailed_description, media_gallery } = project
+  const { title, description, category, cover_image_url,
+    demo_link, github_link, detailed_description } = project
+  const tech_stack = project.tech_stack as string[]
+  const media_gallery = project.media_gallery as MediaItem[] | null
 
   return (
     <main className="min-h-screen bg-zinc-950 px-6 py-20">
@@ -211,7 +213,7 @@ export default async function ProjectDetailPage(
 
         {/* Tech stack */}
         <div className="flex flex-wrap gap-2 mb-10">
-          {(tech_stack as string[]).map((tech: string) => (
+          {tech_stack.map((tech) => (
             <span
               key={tech}
               className="px-3 py-1 rounded-lg text-sm font-mono bg-zinc-800 border border-zinc-700 text-zinc-300"
