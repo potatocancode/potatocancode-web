@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useTransition } from 'react'
+import { forwardRef, useImperativeHandle, useRef, useState, useTransition } from 'react'
 import { Upload, X, Plus, Trash2, GripVertical, Eye, Code } from 'lucide-react'
 import type { Project, MediaItem } from '@/lib/supabase/types'
 
@@ -50,13 +50,18 @@ function MarkdownPreview({ content }: { content: string }) {
 
 // ── Media gallery manager ──────────────────────────────────────────────────────
 
-function MediaGalleryManager({
-  initial,
-  onChange,
-}: {
+interface MediaGalleryManagerHandle {
+  /** Returns current items + any un-submitted pending URL input */
+  getItems: () => MediaItem[]
+}
+
+const MediaGalleryManager = forwardRef<MediaGalleryManagerHandle, {
   initial: MediaItem[]
   onChange: (items: MediaItem[]) => void
-}) {
+}>(function MediaGalleryManager({
+  initial,
+  onChange,
+}, ref) {
   const [items, setItems] = useState<MediaItem[]>(initial)
   const [urlInput, setUrlInput] = useState('')
   const [typeInput, setTypeInput] = useState<'image' | 'video'>('image')
@@ -92,6 +97,16 @@ function MediaGalleryManager({
     ;[next[idx], next[idx + 1]] = [next[idx + 1], next[idx]]
     update(next)
   }
+
+  useImperativeHandle(ref, () => ({
+    getItems: () => {
+      const pending = urlInput.trim()
+      if (pending) {
+        return [...items, { url: pending, type: typeInput, caption: captionInput.trim() || undefined }]
+      }
+      return items
+    },
+  }))
 
   return (
     <div className="flex flex-col gap-3">
@@ -144,7 +159,7 @@ function MediaGalleryManager({
             <option value="video">影片</option>
           </select>
           <input
-            type="url"
+            type="text"
             value={urlInput}
             onChange={e => setUrlInput(e.target.value)}
             placeholder="貼上圖片或影片 URL..."
@@ -172,7 +187,7 @@ function MediaGalleryManager({
       </div>
     </div>
   )
-}
+})
 
 // ── Main form ──────────────────────────────────────────────────────────────────
 
@@ -185,6 +200,7 @@ export default function ProjectForm({ project, action }: Props) {
   const [showPreview, setShowPreview] = useState(false)
   const [mediaItems, setMediaItems] = useState<MediaItem[]>(project?.media_gallery ?? [])
   const fileRef = useRef<HTMLInputElement>(null)
+  const mediaGalleryRef = useRef<MediaGalleryManagerHandle>(null)
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -205,7 +221,7 @@ export default function ProjectForm({ project, action }: Props) {
     // Inject controlled state that isn't standard inputs
     formData.set('slug', slug)
     formData.set('detailed_description', detailedDesc)
-    formData.set('media_gallery', JSON.stringify(mediaItems))
+    formData.set('media_gallery', JSON.stringify(mediaGalleryRef.current?.getItems() ?? mediaItems))
     startTransition(async () => {
       const result = await action(formData)
       if (result?.error) setErrorMsg(result.error)
@@ -333,6 +349,7 @@ export default function ProjectForm({ project, action }: Props) {
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-zinc-300">媒體藝廊 <span className="text-zinc-500">（圖片或影片 URL，詳情頁展示）</span></label>
         <MediaGalleryManager
+          ref={mediaGalleryRef}
           initial={project?.media_gallery ?? []}
           onChange={setMediaItems}
         />
