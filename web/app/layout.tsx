@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import ConditionalHeader from "@/components/ConditionalHeader";
+import SocialDock from "@/components/SocialDock";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -60,13 +61,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-TW">
+    <html lang="zh-TW" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
         <ConditionalHeader />
         {children}
+        <SocialDock />
       </body>
     </html>
   );

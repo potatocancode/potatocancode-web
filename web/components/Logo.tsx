@@ -7,12 +7,21 @@ export default function Logo() {
     <Link
       href="/"
       aria-label="回首頁"
-      className="logo-root inline-flex items-center gap-0 font-mono font-bold text-xl select-none cursor-pointer"
+      className="group flex items-center gap-3 select-none"
     >
-      <span className="logo-bracket text-indigo-400">{`{`}</span>
-      <span className="text-white tracking-tight px-1.5">PC</span>
-      <span className="logo-cursor" aria-hidden="true" />
-      <span className="logo-bracket text-indigo-400">{`}`}</span>
+      <span
+        className="text-[21px] sm:text-[26px] tracking-tight text-black transition-opacity group-hover:opacity-70"
+        style={{ fontFamily: 'var(--font-heading)' }}
+      >
+        PotatoCan<sup className="text-[0.6em] align-super">®</sup>
+      </span>
+      <span
+        className="text-[25px] sm:text-[30px] text-black select-none transition-transform duration-700 ease-out group-hover:rotate-180"
+        style={{ letterSpacing: '-0.02em' }}
+        aria-hidden="true"
+      >
+        ✳︎
+      </span>
     </Link>
   )
 }

@@ -1,7 +1,7 @@
 import { createAnonClient } from '@/lib/supabase/server'
 import { signOut } from './actions'
 import Link from 'next/link'
-import { LayoutGrid, MessageSquare, LogOut } from 'lucide-react'
+import { LayoutGrid, Wrench, MessageSquare, LogOut } from 'lucide-react'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createAnonClient()
@@ -22,6 +22,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/projects"
             className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors">
             <LayoutGrid size={16} /> 作品集管理
+          </Link>
+          <Link href="/admin/services"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors">
+            <Wrench size={16} /> 服務項目管理
           </Link>
           <Link href="/admin/inquiries"
             className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors">

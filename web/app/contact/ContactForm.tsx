@@ -45,11 +45,11 @@ export default function ContactForm() {
       <div
         role="status"
         aria-live="polite"
-        className="flex flex-col items-center gap-4 rounded-xl border border-green-500/30 bg-green-500/10 px-8 py-12 text-center"
+        className="flex flex-col items-center gap-4 rounded-2xl border border-green-200 bg-green-50 px-8 py-12 text-center"
       >
-        <CheckCircle className="text-green-400" size={40} />
-        <p className="text-xl font-semibold text-white">提交成功！</p>
-        <p className="text-sm text-zinc-400">感謝您的詢問，我將盡快與您聯繫。</p>
+        <CheckCircle className="text-green-600" size={40} />
+        <p className="text-xl font-semibold text-black">提交成功！</p>
+        <p className="text-sm text-black/50">感謝您的詢問，我將盡快與您聯繫。</p>
       </div>
     )
   }
@@ -57,8 +57,8 @@ export default function ContactForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="customer_name" className="text-sm font-medium text-zinc-300">
-          姓名 <span className="text-red-400">*</span>
+        <label htmlFor="customer_name" className="text-sm font-medium text-black/70">
+          姓名 <span className="text-red-500">*</span>
         </label>
         <input
           id="customer_name"
@@ -66,13 +66,13 @@ export default function ContactForm() {
           type="text"
           required
           placeholder="王小明"
-          className="rounded-lg border border-zinc-700 bg-zinc-800/60 px-4 py-2.5 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+          className="rounded-lg border border-black/15 bg-white px-4 py-2.5 text-black placeholder-black/40 focus:border-black focus:outline-none"
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-sm font-medium text-zinc-300">
-          Email <span className="text-red-400">*</span>
+        <label htmlFor="email" className="text-sm font-medium text-black/70">
+          Email <span className="text-red-500">*</span>
         </label>
         <input
           id="email"
@@ -80,20 +80,20 @@ export default function ContactForm() {
           type="email"
           required
           placeholder="example@mail.com"
-          className="rounded-lg border border-zinc-700 bg-zinc-800/60 px-4 py-2.5 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+          className="rounded-lg border border-black/15 bg-white px-4 py-2.5 text-black placeholder-black/40 focus:border-black focus:outline-none"
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="project_type" className="text-sm font-medium text-zinc-300">
-          需求類型 <span className="text-red-400">*</span>
+        <label htmlFor="project_type" className="text-sm font-medium text-black/70">
+          需求類型 <span className="text-red-500">*</span>
         </label>
         <select
           id="project_type"
           name="project_type"
           required
           defaultValue=""
-          className="rounded-lg border border-zinc-700 bg-zinc-800/60 px-4 py-2.5 text-white focus:border-indigo-500 focus:outline-none"
+          className="rounded-lg border border-black/15 bg-white px-4 py-2.5 text-black focus:border-black focus:outline-none"
         >
           <option value="" disabled>請選擇...</option>
           {PROJECT_TYPES.map((t) => (
@@ -103,8 +103,8 @@ export default function ContactForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="message" className="text-sm font-medium text-zinc-300">
-          需求描述 <span className="text-red-400">*</span>
+        <label htmlFor="message" className="text-sm font-medium text-black/70">
+          需求描述 <span className="text-red-500">*</span>
         </label>
         <textarea
           id="message"
@@ -112,18 +112,18 @@ export default function ContactForm() {
           required
           rows={5}
           placeholder="請描述您的專案需求、預算範圍或時程..."
-          className="rounded-lg border border-zinc-700 bg-zinc-800/60 px-4 py-2.5 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none resize-none"
+          className="rounded-lg border border-black/15 bg-white px-4 py-2.5 text-black placeholder-black/40 focus:border-black focus:outline-none resize-none"
         />
       </div>
 
       {state === 'error' && (
-        <p role="alert" className="text-sm text-red-400">{errorMsg || '提交失敗，請稍後再試。'}</p>
+        <p role="alert" className="text-sm text-red-500">{errorMsg || '提交失敗，請稍後再試。'}</p>
       )}
 
       <button
         type="submit"
         disabled={state === 'submitting'}
-        className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-indigo-500 disabled:opacity-60"
+        className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-6 py-3 font-semibold text-white transition-colors hover:bg-neutral-800 disabled:opacity-60"
       >
         {state === 'submitting' ? (
           <><Loader2 size={16} className="animate-spin" /> 送出中...</>

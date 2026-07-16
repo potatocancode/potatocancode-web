@@ -108,6 +108,52 @@ export async function deleteProject(id: string) {
   revalidatePath('/portfolio')
 }
 
+// ── Services ──────────────────────────────────────────────────────────────────
+
+function parsePrice(raw: string): number | null {
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+  const n = Number(trimmed)
+  return Number.isFinite(n) ? n : null
+}
+
+export async function createService(formData: FormData) {
+  const service = createServiceClient()
+  const { error } = await service.from('services').insert({
+    title: formData.get('title') as string,
+    description: formData.get('description') as string,
+    icon_name: (formData.get('icon_name') as string).trim() || 'Layers',
+    base_price: parsePrice(formData.get('base_price') as string),
+  })
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/services')
+  revalidatePath('/services')
+  redirect('/admin/services')
+}
+
+export async function updateService(id: string, formData: FormData) {
+  const service = createServiceClient()
+  const { error } = await service.from('services').update({
+    title: formData.get('title') as string,
+    description: formData.get('description') as string,
+    icon_name: (formData.get('icon_name') as string).trim() || 'Layers',
+    base_price: parsePrice(formData.get('base_price') as string),
+  }).eq('id', id)
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/services')
+  revalidatePath('/services')
+  redirect('/admin/services')
+}
+
+export async function deleteService(id: string) {
+  const service = createServiceClient()
+  await service.from('services').delete().eq('id', id)
+  revalidatePath('/admin/services')
+  revalidatePath('/services')
+}
+
 // ── Inquiries ─────────────────────────────────────────────────────────────────
 
 export async function updateInquiryStatus(id: string, status: InquiryStatus) {

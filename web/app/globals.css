@@ -3,63 +3,41 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0a0a0a;
+
+  /* Self-hosted Geist (via next/font) — no external CDN dependency.
+     Heading vs body are differentiated by font-weight in the components. */
+  --font-heading: var(--font-geist-sans), 'Helvetica Neue', Arial, sans-serif;
+  --font-body: var(--font-geist-sans), 'Helvetica Neue', Arial, sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-body);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
 }
 
+/* Typewriter cursor blink */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+/* Hero action pills reveal */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Legacy logo bracket flash (kept for any remaining {PC} usage) */
 @keyframes cursor-blink {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
-}
-
-@keyframes bracket-flash {
-  0%, 100% { opacity: 1; text-shadow: 0 0 8px #818cf8; }
-  50%       { opacity: 0.3; text-shadow: none; }
-}
-
-.logo-bracket {
-  display: inline-block;
-  transition: color 0.2s;
-}
-
-.logo-root:hover .logo-bracket,
-.logo-root:active .logo-bracket {
-  animation: bracket-flash 0.5s step-end infinite;
-  color: #a5b4fc;
-}
-
-.logo-cursor {
-  display: inline-block;
-  width: 2px;
-  height: 1.1em;
-  background: #818cf8;
-  margin-left: 1px;
-  vertical-align: text-bottom;
-  opacity: 0;
-  transition: opacity 0.1s;
-}
-
-.logo-root:hover .logo-cursor,
-.logo-root:active .logo-cursor {
-  opacity: 1;
-  animation: cursor-blink 0.7s step-end infinite;
+  50%      { opacity: 0; }
 }
