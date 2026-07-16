@@ -21,7 +21,7 @@ export default function SocialDock() {
   if (pathname.startsWith('/admin')) return null
 
   return (
-    <div className="fixed bottom-5 right-5 z-40 flex flex-col items-center gap-3">
+    <div className="fixed bottom-5 right-5 z-50 flex flex-col items-center gap-3">
       {/* Gmail */}
       <a
         href={GMAIL_HREF}

@@ -36,6 +36,20 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Hero action pills — hand-placed scatter on desktop, straightened on mobile */
+.hero-pill {
+  transform: rotate(var(--pill-rotate, 0deg)) translateY(var(--pill-y, 0px));
+}
+.hero-pill:hover {
+  transform: rotate(0deg) translateY(0);
+}
+@media (max-width: 767px) {
+  .hero-pill,
+  .hero-pill:hover {
+    transform: none;
+  }
+}
+
 /* Legacy logo bracket flash (kept for any remaining {PC} usage) */
 @keyframes cursor-blink {
   0%, 100% { opacity: 1; }

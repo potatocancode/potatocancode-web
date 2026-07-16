@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
 
 const VIDEO_SRC =
@@ -31,7 +31,7 @@ const PILLS: Pill[] = [
 ]
 
 const PILL_CLASS =
-  'inline-flex items-center justify-center whitespace-nowrap bg-white text-black border border-black/10 rounded-full text-[13px] sm:text-[15px] px-4 sm:px-5 py-[0.35em] mx-[0.25em] mb-[0.5em] shadow-sm transition-all duration-200 hover:bg-black hover:text-white hover:!rotate-0 hover:!translate-y-0'
+  'hero-pill inline-flex items-center justify-center whitespace-nowrap bg-white text-black border border-black/10 rounded-full text-[13px] sm:text-[15px] px-4 sm:px-5 py-[0.35em] mx-[0.25em] mb-[0.5em] shadow-sm transition-all duration-200 hover:bg-black hover:text-white'
 
 export default function HeroVideo() {
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -180,8 +180,9 @@ export default function HeroVideo() {
         >
           {PILLS.map((pill) => {
             const scatter = {
-              transform: `rotate(${pill.rotate}deg) translateY(${pill.offsetY}px)`,
-            }
+              '--pill-rotate': `${pill.rotate}deg`,
+              '--pill-y': `${pill.offsetY}px`,
+            } as CSSProperties
             return pill.external ? (
               <a
                 key={pill.label}
