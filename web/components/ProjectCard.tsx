@@ -1,15 +1,15 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { ExternalLink, Github, Layers, ArrowRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Project } from '@/lib/supabase/types'
 
-const CATEGORY_COLORS: Record<Project['category'], string> = {
-  Web: 'bg-black/[0.04] text-black/70 border-black/10',
-  App: 'bg-black/[0.04] text-black/70 border-black/10',
-  System: 'bg-black/[0.04] text-black/70 border-black/10',
+/** Each category owns an accent surface. Ink text on all of them. */
+const CATEGORY_SURFACE: Record<Project['category'], string> = {
+  Web: 'bg-pop-sky',
+  App: 'bg-pop-red',
+  System: 'bg-pop-violet',
 }
 
 interface ProjectCardProps {
@@ -17,98 +17,127 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
-  const { title, description, tech_stack, cover_image_url, demo_link, github_link, category, slug } = project
+  const {
+    title,
+    description,
+    tech_stack,
+    cover_image_url,
+    demo_link,
+    github_link,
+    category,
+    slug,
+  } = project
 
-  const cardContent = (
-    <motion.div
-      whileHover={{ y: -4, scale: 1.01 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-      className="group flex flex-col rounded-2xl border border-black/10 bg-white overflow-hidden hover:border-black/40 transition-colors h-full"
+  return (
+    <div
+      className={`group relative flex h-full flex-col border-4 border-ink bg-paper shadow-nb ${
+        slug ? 'nb-press' : ''
+      }`}
     >
-      {/* Cover image */}
-      <div className="relative h-48 w-full bg-neutral-100 overflow-hidden">
+      {/* Cover */}
+      <div className="relative h-48 w-full overflow-hidden border-b-4 border-ink bg-cream">
         {cover_image_url ? (
           <Image
             src={cover_image_url}
             alt={title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="object-cover"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-black/20">
-            <Layers size={40} />
+          <div
+            className="absolute inset-0 flex items-center justify-center text-ink/25"
+            style={{
+              backgroundImage:
+                'repeating-linear-gradient(45deg, rgba(10,10,10,0.05) 0px, rgba(10,10,10,0.05) 10px, transparent 10px, transparent 20px)',
+            }}
+          >
+            <Layers size={40} strokeWidth={2} />
           </div>
         )}
-        {/* Category badge */}
+
+        {/* Category badge — slapped on, straightens when the card is hovered */}
         <span
-          className={`absolute top-3 right-3 px-2.5 py-0.5 rounded-full border text-xs font-semibold ${CATEGORY_COLORS[category]}`}
+          className={`absolute right-3 top-3 rotate-2 border-[3px] border-ink px-2.5 py-0.5 font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform duration-200 group-hover:rotate-0 ${CATEGORY_SURFACE[category]}`}
         >
           {category}
         </span>
       </div>
 
-      {/* Content */}
-      <div className="flex flex-col flex-1 p-5 gap-3">
+      {/* Body */}
+      <div className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-lg font-semibold text-black">{title}</h3>
+          <h3
+            className="text-[19px] font-bold leading-tight tracking-[-0.02em] text-ink"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            {slug ? (
+              // Stretched link: covers the whole card without nesting anchors
+              // inside the Demo/GitHub links below.
+              <Link
+                href={`/portfolio/${slug}`}
+                className="after:absolute after:inset-0 after:content-['']"
+              >
+                {title}
+              </Link>
+            ) : (
+              title
+            )}
+          </h3>
           {slug && (
-            <ArrowRight size={16} className="shrink-0 mt-1 text-black/30 group-hover:text-black transition-colors" />
+            <ArrowRight
+              size={17}
+              strokeWidth={2.5}
+              className="mt-0.5 shrink-0 text-ink/30 transition-colors group-hover:text-ink"
+              aria-hidden="true"
+            />
           )}
         </div>
 
-        <p className="text-sm text-black/50 line-clamp-2">{description}</p>
+        <p className="line-clamp-2 text-[14px] leading-relaxed text-stone">
+          {description}
+        </p>
 
-        {/* Tech stack tags */}
-        <div className="flex flex-wrap gap-2 mt-auto pt-2">
+        {/* Tech stack */}
+        <div className="mt-auto flex flex-wrap gap-2 pt-2">
           {tech_stack.map((tech) => (
             <span
               key={tech}
-              className="px-2 py-0.5 rounded-md text-xs bg-black/[0.04] border border-black/10 text-black/60"
+              className="border-2 border-ink bg-cream px-2 py-0.5 font-mono text-[11px] font-medium text-ink"
             >
               {tech}
             </span>
           ))}
         </div>
 
-        {/* Links */}
-        <div className="flex gap-3 pt-2 border-t border-black/10">
-          {demo_link && (
-            <a
-              href={demo_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="inline-flex items-center gap-1.5 text-sm text-black/60 hover:text-black transition-colors"
-            >
-              <ExternalLink size={14} />
-              Demo
-            </a>
-          )}
-          {github_link && (
-            <a
-              href={github_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="inline-flex items-center gap-1.5 text-sm text-black/60 hover:text-black transition-colors"
-            >
-              <Github size={14} />
-              GitHub
-            </a>
-          )}
-        </div>
+        {/* Links — z-10 lifts them above the stretched link */}
+        {(demo_link || github_link) && (
+          <div className="relative z-10 flex gap-4 border-t-[3px] border-ink pt-3">
+            {demo_link && (
+              <a
+                href={demo_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[13px] font-bold text-ink transition-colors hover:text-ink/55"
+              >
+                <ExternalLink size={14} strokeWidth={2.5} />
+                Demo
+              </a>
+            )}
+            {github_link && (
+              <a
+                href={github_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[13px] font-bold text-ink transition-colors hover:text-ink/55"
+              >
+                <Github size={14} strokeWidth={2.5} />
+                GitHub
+              </a>
+            )}
+          </div>
+        )}
       </div>
-    </motion.div>
+    </div>
   )
-
-  if (slug) {
-    return (
-      <Link href={`/portfolio/${slug}`} className="block">
-        {cardContent}
-      </Link>
-    )
-  }
-
-  return cardContent
 }

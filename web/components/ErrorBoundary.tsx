@@ -34,20 +34,27 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div
           role="alert"
-          className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-red-200 bg-red-50 px-8 py-12 text-center"
+          className="flex flex-col items-center justify-center gap-5 border-4 border-ink bg-pop-red px-8 py-14 text-center shadow-nb"
         >
-          <AlertTriangle className="text-red-500" size={36} />
+          <span className="flex h-12 w-12 items-center justify-center border-[3px] border-ink bg-cream text-ink">
+            <AlertTriangle size={24} strokeWidth={2.25} />
+          </span>
           <div>
-            <p className="text-lg font-semibold text-black">資料載入失敗</p>
-            <p className="mt-1 text-sm text-black/50">
+            <p
+              className="text-[22px] font-bold tracking-[-0.02em] text-ink"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              資料載入失敗
+            </p>
+            <p className="mt-2 max-w-md text-sm text-ink/70">
               {this.state.error?.message ?? '發生未知錯誤，請稍後再試。'}
             </p>
           </div>
           <button
             onClick={this.handleReset}
-            className="inline-flex items-center gap-2 rounded-full border border-black/15 px-4 py-2 text-sm text-black hover:bg-black hover:text-white transition-colors"
+            className="nb-press inline-flex cursor-pointer items-center gap-2 border-[3px] border-ink bg-cream px-5 py-2.5 text-sm font-bold text-ink shadow-nb"
           >
-            <RefreshCw size={14} />
+            <RefreshCw size={15} strokeWidth={2.5} />
             重新載入
           </button>
         </div>

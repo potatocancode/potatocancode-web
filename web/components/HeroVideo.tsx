@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
+import { ArrowDown, ArrowUpRight } from 'lucide-react'
 
 const VIDEO_SRC =
   'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260530_042513_df96a13b-6155-4f6e-8b93-c9dee66fba08.mp4'
@@ -12,26 +13,25 @@ interface Pill {
   label: string
   href: string
   external?: boolean
+  primary?: boolean
   /** Hand-placed scatter so the row reads as composed, not stamped. */
   rotate: number
-  offsetY: number
 }
 
 const PILLS: Pill[] = [
-  { label: '看看作品集', href: '/portfolio', rotate: -2.5, offsetY: 6 },
-  { label: '我提供的服務', href: '/services', rotate: 1.5, offsetY: -5 },
-  { label: '聊聊你的專案', href: '/contact', rotate: -1, offsetY: 9 },
+  { label: '看看作品集', href: '/portfolio', primary: true, rotate: -2 },
+  { label: '聊聊你的專案', href: '/contact', primary: true, rotate: 1.5 },
+  { label: '我提供的服務', href: '/services', rotate: -1 },
   {
-    label: '查看 GitHub',
+    label: 'GitHub',
     href: 'https://github.com/potatocancode',
     external: true,
-    rotate: 2.5,
-    offsetY: 0,
+    rotate: 2,
   },
 ]
 
-const PILL_CLASS =
-  'hero-pill inline-flex items-center justify-center whitespace-nowrap bg-white text-black border border-black/10 rounded-full text-[13px] sm:text-[15px] px-4 sm:px-5 py-[0.35em] mx-[0.25em] mb-[0.5em] shadow-sm transition-all duration-200 hover:bg-black hover:text-white'
+const PILL_BASE =
+  'nb-tilt nb-press inline-flex items-center gap-1.5 border-[3px] border-ink px-4 py-2.5 text-[14px] font-bold text-ink shadow-nb sm:px-5 sm:text-[15px]'
 
 export default function HeroVideo() {
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -42,7 +42,6 @@ export default function HeroVideo() {
   const targetTimeRef = useRef(0)
   const isSeekingRef = useRef(false)
   const prevXRef = useRef<number | null>(null)
-  const ambientRef = useRef(false)
 
   // Reveal pills 400ms after load.
   useEffect(() => {
@@ -55,15 +54,20 @@ export default function HeroVideo() {
     const video = videoRef.current
     if (!video) return
 
-    // Touch / no-hover devices can't scrub — play a gentle muted loop instead.
+    // Touch / no-hover devices can't scrub — play a gentle muted loop instead,
+    // unless the visitor has asked for reduced motion.
     const coarse =
+      typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches
+    const reduced =
       typeof window !== 'undefined' &&
-      window.matchMedia('(hover: none)').matches
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
     if (coarse) {
-      ambientRef.current = true
-      video.loop = true
-      video.muted = true
-      video.play().catch(() => {})
+      if (!reduced) {
+        video.loop = true
+        video.muted = true
+        video.play().catch(() => {})
+      }
       return
     }
 
@@ -112,99 +116,109 @@ export default function HeroVideo() {
   }, [])
 
   return (
-    <section className="relative h-screen flex flex-col justify-end pb-14 md:justify-center md:pb-0 px-5 sm:px-8 md:px-10 overflow-hidden">
-      {/* Background video (or gradient fallback) */}
-      {videoFailed ? (
-        <div
-          className="fixed inset-0 z-0"
-          style={{
-            background:
-              'radial-gradient(120% 120% at 70% 30%, #f4f4f5 0%, #e4e4e7 45%, #d4d4d8 100%)',
-          }}
-          aria-hidden="true"
-        />
-      ) : (
-        <video
-          ref={videoRef}
-          src={VIDEO_SRC}
-          muted
-          playsInline
-          preload="auto"
-          onError={() => setVideoFailed(true)}
-          className="fixed inset-0 z-0 h-full w-full"
-          style={{ objectFit: 'cover', objectPosition: '70% center' }}
-        />
-      )}
+    <section className="relative flex min-h-[100svh] flex-col pt-16 md:pt-[72px]">
+      {/* Media panel — the video is scoped to the hero, not the whole page, so
+          the sections below scroll over an opaque canvas. */}
+      <div className="relative flex flex-1 items-end overflow-hidden md:items-center">
+        {videoFailed ? (
+          <div
+            className="absolute inset-0 z-0"
+            style={{
+              background:
+                'repeating-linear-gradient(45deg, #ffd93d 0px, #ffd93d 28px, #fffdf5 28px, #fffdf5 56px)',
+            }}
+            aria-hidden="true"
+          />
+        ) : (
+          <video
+            ref={videoRef}
+            src={VIDEO_SRC}
+            muted
+            playsInline
+            preload="auto"
+            aria-hidden="true"
+            onError={() => setVideoFailed(true)}
+            className="absolute inset-0 z-0 h-full w-full"
+            style={{ objectFit: 'cover', objectPosition: '70% center' }}
+          />
+        )}
 
-      <div className="relative z-10 max-w-2xl">
-        {/* Wordmark */}
-        <h1
-          className="text-black"
-          style={{
-            fontFamily: 'var(--font-heading)',
-            fontSize: 'clamp(46px, 9vw, 92px)',
-            lineHeight: 0.98,
-            fontWeight: 500,
-            letterSpacing: '-0.035em',
-          }}
-        >
-          <span className="block">PotatoCanCode</span>
-          <span
-            className="block"
-            style={{ fontWeight: 400, opacity: 0.55, letterSpacing: '-0.02em' }}
-          >
-            Studio
-          </span>
-        </h1>
+        {/* Poster panel — guarantees text contrast over unpredictable video
+            frames, and reads as a label slapped onto the media. */}
+        <div className="relative z-10 w-full px-4 pb-12 sm:px-6 md:px-10 md:pb-0">
+          <div className="max-w-2xl border-4 border-ink bg-cream p-6 shadow-nb-lg sm:p-8 md:p-10">
+            <p className="mb-4 font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-stone sm:text-[12px]">
+              Custom&nbsp;App&nbsp;/&nbsp;Web&nbsp;/&nbsp;System
+            </p>
 
-        {/* Discipline line */}
-        <p
-          className="text-black font-mono font-medium mt-4 sm:mt-5 mb-8 sm:mb-9"
-          style={{
-            fontSize: 'clamp(11px, 1.6vw, 14px)',
-            letterSpacing: '0.3em',
-            textTransform: 'uppercase',
-          }}
-        >
-          Custom&nbsp;APP&nbsp;<span className="text-black/35">/</span>&nbsp;Web&nbsp;<span className="text-black/35">/</span>&nbsp;System
-        </p>
+            <h1
+              className="text-ink"
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(38px, 7.5vw, 82px)',
+                lineHeight: 0.94,
+                fontWeight: 700,
+                letterSpacing: '-0.035em',
+              }}
+            >
+              <span className="block">PotatoCanCode</span>
+              <span className="mt-2 inline-block border-[3px] border-ink bg-pop-yellow px-3 py-0.5 shadow-nb">
+                Studio
+              </span>
+            </h1>
 
-        {/* Action pills — scattered */}
-        <div
-          className="flex flex-wrap items-start"
-          style={{
-            opacity: showPills ? 1 : 0,
-            transform: showPills ? 'translateY(0)' : 'translateY(8px)',
-            transition: 'opacity 0.5s ease, transform 0.5s ease',
-          }}
-        >
-          {PILLS.map((pill) => {
-            const scatter = {
-              '--pill-rotate': `${pill.rotate}deg`,
-              '--pill-y': `${pill.offsetY}px`,
-            } as CSSProperties
-            return pill.external ? (
-              <a
-                key={pill.label}
-                href={pill.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={PILL_CLASS}
-                style={scatter}
-              >
-                {pill.label}
-              </a>
-            ) : (
-              <Link
-                key={pill.label}
-                href={pill.href}
-                className={PILL_CLASS}
-                style={scatter}
-              >
-                {pill.label}
-              </Link>
-            )
-          })}
+            <p className="mt-6 max-w-md text-[15px] font-medium leading-relaxed text-stone sm:text-base">
+              CSIE 資工背景開發者，專精客製化網頁、跨平台 App 與系統程式。
+              <span className="text-ink">從設計到部署，一個人全包。</span>
+            </p>
+
+            <div
+              className="mt-7 flex flex-wrap gap-3"
+              style={{
+                opacity: showPills ? 1 : 0,
+                transform: showPills ? 'translateY(0)' : 'translateY(8px)',
+                transition: 'opacity 0.5s ease, transform 0.5s ease',
+              }}
+            >
+              {PILLS.map((pill) => {
+                const scatter = { '--tilt': `${pill.rotate}deg` } as CSSProperties
+                const cls = `${PILL_BASE} ${pill.primary ? 'bg-pop-yellow' : 'bg-paper'}`
+                return pill.external ? (
+                  <a
+                    key={pill.label}
+                    href={pill.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cls}
+                    style={scatter}
+                  >
+                    {pill.label}
+                    <ArrowUpRight size={15} className="shrink-0" />
+                  </a>
+                ) : (
+                  <Link
+                    key={pill.label}
+                    href={pill.href}
+                    className={cls}
+                    style={scatter}
+                  >
+                    {pill.label}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Scroll cue — on its own opaque chip; the video frame behind it is
+              unpredictable, and bare ink text on mid-grey fails contrast. */}
+          <div className="mt-8 hidden md:block">
+            <span className="inline-flex items-center gap-2.5 border-[3px] border-ink bg-cream px-3 py-2 shadow-[3px_3px_0_var(--color-ink)]">
+              <ArrowDown size={15} strokeWidth={2.5} className="text-ink" />
+              <span className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-ink">
+                往下看技術實力
+              </span>
+            </span>
+          </div>
         </div>
       </div>
     </section>

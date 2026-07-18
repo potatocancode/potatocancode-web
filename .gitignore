@@ -17,3 +17,9 @@ supabase/.temp/
 
 # ── Claude local settings (per-machine, not shared) ──────────
 .claude/settings.local.json
+.gstack/
+
+# ── Vendored agent skills (本機工具，非網站內容) ──────────────
+.agents/
+.claude/skills/
+skills-lock.json

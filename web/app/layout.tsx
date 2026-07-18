@@ -1,17 +1,35 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, Noto_Sans_TC, JetBrains_Mono } from "next/font/google";
 import ConditionalHeader from "@/components/ConditionalHeader";
 import SocialDock from "@/components/SocialDock";
+import SiteFooter from "@/components/SiteFooter";
+import MotionProvider from "@/components/MotionProvider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Display + body. Neo-brutalism uses bold weights only.
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Catches every Han character behind Space Grotesk, which has no CJK glyphs.
+// preload:false — the traditional-chinese subset is ~20k glyphs across ~100
+// woff2 slices; Google's unicode-range splitting means the browser pulls only
+// the slices a page actually uses, but preloading all of them would be fatal.
+const notoSansTC = Noto_Sans_TC({
+  variable: "--font-noto-tc",
+  weight: ["400", "500", "700", "900"],
+  display: "swap",
+  preload: false,
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -63,11 +81,12 @@ export default function RootLayout({
   return (
     <html lang="zh-TW" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${spaceGrotesk.variable} ${notoSansTC.variable} ${jetbrainsMono.variable} bg-cream text-ink antialiased`}
         suppressHydrationWarning
       >
         <ConditionalHeader />
-        {children}
+        <MotionProvider>{children}</MotionProvider>
+        <SiteFooter />
         <SocialDock />
       </body>
     </html>

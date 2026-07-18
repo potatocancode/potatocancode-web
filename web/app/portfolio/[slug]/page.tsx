@@ -34,51 +34,72 @@ export async function generateMetadata(
   }
 }
 
-// ── Category color ─────────────────────────────────────────────────────────────
+// ── Category surface (matches ProjectCard) ─────────────────────────────────────
 
-const CATEGORY_COLORS: Record<string, string> = {
-  Web: 'bg-black/[0.04] text-black/70 border-black/10',
-  App: 'bg-black/[0.04] text-black/70 border-black/10',
-  System: 'bg-black/[0.04] text-black/70 border-black/10',
+const CATEGORY_SURFACE: Record<string, string> = {
+  Web: 'bg-pop-sky',
+  App: 'bg-pop-red',
+  System: 'bg-pop-violet',
 }
 
 // ── Media embed ────────────────────────────────────────────────────────────────
 
+function MediaFrame({
+  children,
+  caption,
+}: {
+  children: React.ReactNode
+  caption?: string
+}) {
+  return (
+    <figure className="flex flex-col gap-3">
+      <div className="relative aspect-video w-full overflow-hidden border-4 border-ink bg-cream shadow-nb">
+        {children}
+      </div>
+      {caption && (
+        <figcaption className="font-mono text-[12px] text-stone">
+          {caption}
+        </figcaption>
+      )}
+    </figure>
+  )
+}
+
 function MediaEmbed({ item }: { item: MediaItem }) {
   if (item.type === 'video') {
     // YouTube
-    const ytMatch = item.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+    const ytMatch = item.url.match(
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+    )
     if (ytMatch) {
       return (
-        <figure className="flex flex-col gap-2">
-          <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-neutral-100">
-            <iframe
-              src={`https://www.youtube.com/embed/${ytMatch[1]}`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="absolute inset-0 w-full h-full"
-            />
-          </div>
-          {item.caption && <figcaption className="text-center text-xs text-black/40">{item.caption}</figcaption>}
-        </figure>
+        <MediaFrame caption={item.caption}>
+          <iframe
+            src={`https://www.youtube.com/embed/${ytMatch[1]}`}
+            title={item.caption ?? '專案影片'}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 h-full w-full"
+          />
+        </MediaFrame>
       )
     }
 
     // Google Drive
-    const driveMatch = item.url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/)
+    const driveMatch = item.url.match(
+      /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/
+    )
     if (driveMatch) {
       return (
-        <figure className="flex flex-col gap-2">
-          <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-neutral-100">
-            <iframe
-              src={`https://drive.google.com/file/d/${driveMatch[1]}/preview`}
-              allow="autoplay"
-              allowFullScreen
-              className="absolute inset-0 w-full h-full"
-            />
-          </div>
-          {item.caption && <figcaption className="text-center text-xs text-black/40">{item.caption}</figcaption>}
-        </figure>
+        <MediaFrame caption={item.caption}>
+          <iframe
+            src={`https://drive.google.com/file/d/${driveMatch[1]}/preview`}
+            title={item.caption ?? '專案影片'}
+            allow="autoplay"
+            allowFullScreen
+            className="absolute inset-0 h-full w-full"
+          />
+        </MediaFrame>
       )
     }
 
@@ -86,44 +107,38 @@ function MediaEmbed({ item }: { item: MediaItem }) {
     const vimeoMatch = item.url.match(/vimeo\.com\/(\d+)/)
     if (vimeoMatch) {
       return (
-        <figure className="flex flex-col gap-2">
-          <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-neutral-100">
-            <iframe
-              src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
-              allow="autoplay; fullscreen; picture-in-picture"
-              allowFullScreen
-              className="absolute inset-0 w-full h-full"
-            />
-          </div>
-          {item.caption && <figcaption className="text-center text-xs text-black/40">{item.caption}</figcaption>}
-        </figure>
+        <MediaFrame caption={item.caption}>
+          <iframe
+            src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
+            title={item.caption ?? '專案影片'}
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 h-full w-full"
+          />
+        </MediaFrame>
       )
     }
 
     // Generic video file
     return (
-      <figure className="flex flex-col gap-2">
-        <video controls className="w-full rounded-xl bg-neutral-100">
+      <MediaFrame caption={item.caption}>
+        <video controls className="absolute inset-0 h-full w-full object-cover">
           <source src={item.url} />
         </video>
-        {item.caption && <figcaption className="text-center text-xs text-black/40">{item.caption}</figcaption>}
-      </figure>
+      </MediaFrame>
     )
   }
 
-  // Image — use plain <img> since URL hostname is user-provided and unknown
+  // Image — plain <img> since the URL hostname is user-provided and unknown
   return (
-    <figure className="flex flex-col gap-2">
-      <div className="w-full aspect-video rounded-xl overflow-hidden bg-neutral-100">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={item.url}
-          alt={item.caption ?? ''}
-          className="w-full h-full object-cover"
-        />
-      </div>
-      {item.caption && <figcaption className="text-center text-xs text-black/40">{item.caption}</figcaption>}
-    </figure>
+    <MediaFrame caption={item.caption}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={item.url}
+        alt={item.caption ?? ''}
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+    </MediaFrame>
   )
 }
 
@@ -136,26 +151,32 @@ export default async function ProjectDetailPage(
   const project = await getProject(slug)
   if (!project) notFound()
 
-  const { title, description, category, cover_image_url,
-    demo_link, github_link, detailed_description } = project
+  const {
+    title,
+    description,
+    category,
+    cover_image_url,
+    demo_link,
+    github_link,
+    detailed_description,
+  } = project
   const tech_stack = project.tech_stack as string[]
   const media_gallery = project.media_gallery as MediaItem[] | null
 
   return (
-    <main className="min-h-screen bg-white px-6 pt-28 pb-20">
-      <div className="mx-auto max-w-3xl">
-
-        {/* Back button */}
+    <main className="min-h-screen bg-cream px-5 pb-24 pt-16 sm:px-8 md:pt-[72px]">
+      <div className="mx-auto max-w-3xl pt-14">
+        {/* Back */}
         <Link
           href="/portfolio"
-          className="inline-flex items-center gap-2 text-sm text-black/50 hover:text-black transition-colors mb-10"
+          className="nb-press mb-10 inline-flex items-center gap-2 border-[3px] border-ink bg-paper px-4 py-2 text-[14px] font-bold text-ink shadow-nb"
         >
-          <ArrowLeft size={15} />
+          <ArrowLeft size={15} strokeWidth={2.5} />
           返回作品集
         </Link>
 
         {/* Cover */}
-        <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-neutral-100 mb-8">
+        <div className="relative mb-10 aspect-video w-full overflow-hidden border-4 border-ink bg-paper shadow-nb-lg">
           {cover_image_url ? (
             <Image
               src={cover_image_url}
@@ -166,31 +187,47 @@ export default async function ProjectDetailPage(
               priority
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-black/20">
-              <Layers size={56} />
+            <div
+              className="absolute inset-0 flex items-center justify-center text-ink/25"
+              style={{
+                backgroundImage:
+                  'repeating-linear-gradient(45deg, rgba(10,10,10,0.05) 0px, rgba(10,10,10,0.05) 12px, transparent 12px, transparent 24px)',
+              }}
+            >
+              <Layers size={56} strokeWidth={2} />
             </div>
           )}
         </div>
 
         {/* Header */}
-        <div className="flex flex-wrap items-start gap-4 mb-6">
-          <div className="flex-1 min-w-0">
-            <span className={`inline-block mb-3 px-2.5 py-0.5 rounded-full border text-xs font-semibold font-mono ${CATEGORY_COLORS[category] ?? ''}`}>
-              {category}
-            </span>
-            <h1 className="text-3xl font-semibold text-black sm:text-4xl">{title}</h1>
-          </div>
+        <span
+          className={`mb-4 inline-block border-[3px] border-ink px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-ink shadow-[3px_3px_0_var(--color-ink)] ${
+            CATEGORY_SURFACE[category] ?? 'bg-paper'
+          }`}
+        >
+          {category}
+        </span>
 
-          {/* Action links */}
-          <div className="flex gap-3 shrink-0 pt-2">
+        <h1
+          className="text-[34px] font-bold leading-[1.05] tracking-[-0.035em] text-ink sm:text-[46px]"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          {title}
+        </h1>
+
+        <p className="mt-5 text-[16px] leading-relaxed text-stone">{description}</p>
+
+        {/* Actions */}
+        {(demo_link || github_link) && (
+          <div className="mt-7 flex flex-wrap gap-4">
             {demo_link && (
               <a
                 href={demo_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-800 transition-colors"
+                className="nb-press inline-flex items-center gap-2 border-[3px] border-ink bg-ink px-5 py-3 text-[15px] font-bold text-cream shadow-nb"
               >
-                <ExternalLink size={14} />
+                <ExternalLink size={16} strokeWidth={2.5} />
                 Live Demo
               </a>
             )}
@@ -199,24 +236,21 @@ export default async function ProjectDetailPage(
                 href={github_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-black hover:border-black/40 transition-colors"
+                className="nb-press inline-flex items-center gap-2 border-[3px] border-ink bg-paper px-5 py-3 text-[15px] font-bold text-ink shadow-nb"
               >
-                <Github size={14} />
+                <Github size={16} strokeWidth={2.5} />
                 GitHub
               </a>
             )}
           </div>
-        </div>
-
-        {/* Short description */}
-        <p className="text-black/50 text-base mb-6">{description}</p>
+        )}
 
         {/* Tech stack */}
-        <div className="flex flex-wrap gap-2 mb-10">
+        <div className="mt-8 flex flex-wrap gap-2 border-t-4 border-ink pt-8">
           {tech_stack.map((tech) => (
             <span
               key={tech}
-              className="px-3 py-1 rounded-lg text-sm font-mono bg-neutral-100 border border-black/10 text-black/70"
+              className="border-2 border-ink bg-paper px-2.5 py-1 font-mono text-[12px] font-medium text-ink"
             >
               {tech}
             </span>
@@ -225,32 +259,99 @@ export default async function ProjectDetailPage(
 
         {/* Detailed description */}
         {detailed_description && (
-          <section className="mb-12 flex flex-col gap-4 text-sm leading-relaxed">
+          <section className="mt-12">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
-                h1: ({ children }) => <h1 className="text-2xl font-bold text-black mt-6 mb-2">{children}</h1>,
-                h2: ({ children }) => <h2 className="text-xl font-bold text-black mt-5 mb-2">{children}</h2>,
-                h3: ({ children }) => <h3 className="text-base font-semibold text-black mt-4 mb-1">{children}</h3>,
-                p: ({ children }) => <p className="text-black/70 leading-7">{children}</p>,
-                strong: ({ children }) => <strong className="text-black font-semibold">{children}</strong>,
-                em: ({ children }) => <em className="text-black/80 italic">{children}</em>,
-                ul: ({ children }) => <ul className="list-disc list-inside text-black/70 flex flex-col gap-1 pl-2">{children}</ul>,
-                ol: ({ children }) => <ol className="list-decimal list-inside text-black/70 flex flex-col gap-1 pl-2">{children}</ol>,
-                li: ({ children }) => <li className="text-black/70">{children}</li>,
-                a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-black underline hover:opacity-60">{children}</a>,
-                blockquote: ({ children }) => <blockquote className="border-l-4 border-black pl-4 text-black/50 italic my-2">{children}</blockquote>,
+                h1: ({ children }) => (
+                  <h2
+                    className="mt-10 mb-3 text-[26px] font-bold tracking-[-0.02em] text-ink"
+                    style={{ fontFamily: 'var(--font-display)' }}
+                  >
+                    {children}
+                  </h2>
+                ),
+                h2: ({ children }) => (
+                  <h2
+                    className="mt-9 mb-3 text-[22px] font-bold tracking-[-0.02em] text-ink"
+                    style={{ fontFamily: 'var(--font-display)' }}
+                  >
+                    {children}
+                  </h2>
+                ),
+                h3: ({ children }) => (
+                  <h3 className="mt-7 mb-2 text-[17px] font-bold text-ink">
+                    {children}
+                  </h3>
+                ),
+                p: ({ children }) => (
+                  <p className="my-4 text-[15px] leading-7 text-ink/80">{children}</p>
+                ),
+                strong: ({ children }) => (
+                  <strong className="font-bold text-ink">{children}</strong>
+                ),
+                em: ({ children }) => <em className="italic text-ink/90">{children}</em>,
+                ul: ({ children }) => (
+                  <ul className="my-4 flex list-disc flex-col gap-1.5 pl-6 text-[15px] leading-7 text-ink/80 marker:text-ink">
+                    {children}
+                  </ul>
+                ),
+                ol: ({ children }) => (
+                  <ol className="my-4 flex list-decimal flex-col gap-1.5 pl-6 text-[15px] leading-7 text-ink/80 marker:font-bold marker:text-ink">
+                    {children}
+                  </ol>
+                ),
+                li: ({ children }) => <li>{children}</li>,
+                a: ({ href, children }) => (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-bold text-ink underline decoration-[3px] underline-offset-[3px] transition-colors hover:bg-pop-yellow"
+                  >
+                    {children}
+                  </a>
+                ),
+                blockquote: ({ children }) => (
+                  <blockquote className="my-5 border-l-[6px] border-ink bg-paper py-3 pl-5 text-[15px] leading-7 text-ink/75">
+                    {children}
+                  </blockquote>
+                ),
                 code: ({ children, className }) => {
                   const isBlock = className?.includes('language-')
-                  return isBlock
-                    ? <code className="block bg-neutral-100 border border-black/10 rounded-lg px-4 py-3 text-xs font-mono text-black/80 overflow-x-auto whitespace-pre">{children}</code>
-                    : <code className="bg-neutral-100 text-black rounded px-1.5 py-0.5 text-xs font-mono">{children}</code>
+                  return isBlock ? (
+                    <code className="block overflow-x-auto whitespace-pre px-4 py-3 font-mono text-[13px] leading-6 text-cream">
+                      {children}
+                    </code>
+                  ) : (
+                    <code className="border-2 border-ink bg-pop-yellow px-1.5 py-0.5 font-mono text-[13px] text-ink">
+                      {children}
+                    </code>
+                  )
                 },
-                pre: ({ children }) => <pre className="bg-neutral-100 border border-black/10 rounded-lg overflow-x-auto my-2">{children}</pre>,
-                hr: () => <hr className="border-black/10 my-4" />,
-                table: ({ children }) => <div className="overflow-x-auto my-2"><table className="w-full text-sm text-left border-collapse">{children}</table></div>,
-                th: ({ children }) => <th className="border border-black/10 bg-neutral-100 px-3 py-2 text-black font-semibold">{children}</th>,
-                td: ({ children }) => <td className="border border-black/10 px-3 py-2 text-black/70">{children}</td>,
+                pre: ({ children }) => (
+                  <pre className="my-5 overflow-x-auto border-4 border-ink bg-ink shadow-nb">
+                    {children}
+                  </pre>
+                ),
+                hr: () => <hr className="my-8 border-t-4 border-ink" />,
+                table: ({ children }) => (
+                  <div className="my-5 overflow-x-auto border-4 border-ink shadow-nb">
+                    <table className="w-full border-collapse text-left text-[14px]">
+                      {children}
+                    </table>
+                  </div>
+                ),
+                th: ({ children }) => (
+                  <th className="border-2 border-ink bg-pop-yellow px-3 py-2 font-bold text-ink">
+                    {children}
+                  </th>
+                ),
+                td: ({ children }) => (
+                  <td className="border-2 border-ink bg-paper px-3 py-2 text-ink/80">
+                    {children}
+                  </td>
+                ),
               }}
             >
               {detailed_description}
@@ -260,16 +361,20 @@ export default async function ProjectDetailPage(
 
         {/* Media gallery */}
         {media_gallery && media_gallery.length > 0 && (
-          <section>
-            <h2 className="text-xl font-bold text-black mb-6">操作畫面</h2>
-            <div className="flex flex-col gap-8">
+          <section className="mt-14">
+            <h2
+              className="mb-7 border-b-4 border-ink pb-4 text-[24px] font-bold tracking-[-0.02em] text-ink"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              操作畫面
+            </h2>
+            <div className="flex flex-col gap-10">
               {media_gallery.map((item, idx) => (
                 <MediaEmbed key={idx} item={item} />
               ))}
             </div>
           </section>
         )}
-
       </div>
     </main>
   )
