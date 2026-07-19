@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STUDIO 07 零柒工作室 — 自然有機</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2212%22%20fill%3D%22%23f7f4e9%22%2F%3E%3Ctext%20x%3D%2232%22%20y%3D%2244%22%20font-family%3D%22Helvetica%2CArial%2Csans-serif%22%20font-size%3D%2234%22%20font-weight%3D%22bold%22%20text-anchor%3D%22middle%22%20fill%3D%22%2326691f%22%3E07%3C%2Ftext%3E%3C%2Fsvg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400&family=Karla:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --cream:#f7f4e9; --cream2:#efe9d8;
+    --forest:#26691f; --forest-d:#17400f; --moss:#7fa650;
+    --earth:#8b5a2b; --clay:#c98a52; --sky:#87ceeb; --sky-d:#4a9dc4;
+    --ink:#22301c; --dim:#66735c;
+    --r:26px;
+    --sh:0 10px 32px rgba(23,64,15,.1);
+    --pad:clamp(18px,4.6vw,60px);
+  }
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--cream); color:var(--ink); overflow-x:hidden;
+    font-family:'Karla','Noto Sans TC',system-ui,sans-serif; font-size:16px; line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit}
+  ::selection{background:var(--moss); color:#fff}
+  .serif{font-family:'Fraunces','Noto Sans TC',Georgia,serif; font-weight:600; letter-spacing:-.015em}
+
+  /* ---------- 背景有機形狀 ---------- */
+  .bgdeco{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden}
+  .blob{position:absolute; opacity:.16; animation:morph 18s ease-in-out infinite}
+  @keyframes morph{
+    0%,100%{border-radius:62% 38% 46% 54%/54% 46% 54% 46%}
+    33%{border-radius:38% 62% 58% 42%/44% 62% 38% 56%}
+    66%{border-radius:50% 50% 34% 66%/62% 38% 62% 38%}
+  }
+  #leaves{position:fixed; inset:0; width:100%; height:100%; z-index:1; pointer-events:none}
+
+  .shell{position:relative; z-index:2; max-width:1220px; margin:0 auto; padding:0 var(--pad)}
+
+  /* ---------- 導覽 ---------- */
+  .nav{
+    position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:60;
+    width:min(94vw,880px); display:flex; align-items:center; gap:6px; padding:9px 10px 9px 20px;
+    border-radius:999px; background:rgba(247,244,233,.9); border:1px solid rgba(38,105,31,.16);
+    box-shadow:var(--sh); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  }
+  .nav .brand{font-family:'Fraunces',serif; font-weight:900; font-size:17px; text-decoration:none;
+    margin-right:auto; letter-spacing:-.02em}
+  .nav a.l{text-decoration:none; font-size:14px; font-weight:500; padding:9px 15px; border-radius:999px;
+    color:var(--dim); transition:background .3s, color .3s}
+  .nav a.l:hover{background:rgba(127,166,80,.2); color:var(--forest-d)}
+  @media (max-width:820px){.nav a.l:not(.cta){display:none}}
+  .cta{background:var(--forest)!important; color:#fff!important; font-weight:600}
+  .cta:hover{background:var(--forest-d)!important}
+
+  section{padding:clamp(58px,9vh,124px) 0}
+  .kick{
+    display:inline-flex; align-items:center; gap:9px; font-size:12px; font-weight:700;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--forest);
+  }
+  .kick::before{content:''; width:9px; height:9px; border-radius:60% 40% 55% 45%/50% 60% 40% 50%; background:var(--moss)}
+  h2{margin-top:18px; font-family:'Fraunces','Noto Sans TC',serif; font-weight:600;
+     font-size:clamp(30px,5.2vw,62px); line-height:1.1; letter-spacing:-.025em}
+  .sub{margin-top:16px; font-size:17px; color:var(--dim); max-width:56ch}
+
+  .btn{
+    display:inline-block; text-decoration:none; padding:16px 32px; border-radius:999px; cursor:pointer; border:0;
+    font:600 15px/1 'Karla','Noto Sans TC',sans-serif; background:var(--forest); color:#fff;
+    box-shadow:0 8px 22px rgba(38,105,31,.28);
+    transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s, background .3s;
+  }
+  .btn:hover{transform:translateY(-3px); box-shadow:0 14px 30px rgba(38,105,31,.34); background:var(--forest-d)}
+  .btn.o{background:transparent; color:var(--forest-d); box-shadow:inset 0 0 0 2px rgba(38,105,31,.34)}
+  .btn.o:hover{background:rgba(38,105,31,.08); box-shadow:inset 0 0 0 2px var(--forest)}
+  .btn.clay{background:var(--clay); box-shadow:0 8px 22px rgba(201,138,82,.32)}
+  .btn.clay:hover{background:var(--earth)}
+
+  /* ---------- Hero ---------- */
+  .hero{min-height:100svh; display:grid; grid-template-columns:1.25fr 1fr; gap:clamp(24px,4vw,56px);
+    align-items:center; padding-top:120px}
+  @media (max-width:920px){.hero{grid-template-columns:1fr; padding-top:130px}}
+  h1{font-family:'Fraunces','Noto Sans TC',serif; font-weight:600;
+     font-size:clamp(38px,6.6vw,88px); line-height:1.06; letter-spacing:-.035em}
+  h1 em{font-style:italic; color:var(--forest)}
+  .lede{margin-top:24px; font-size:clamp(16px,1.8vw,20px); color:var(--dim); max-width:46ch}
+  .btnrow{margin-top:32px; display:flex; flex-wrap:wrap; gap:14px}
+  /* 會呼吸的 SVG 有機圖形 */
+  .organism{width:100%; max-width:460px; margin-inline:auto; display:block; overflow:visible}
+  .organism .core{fill:var(--forest); opacity:.9}
+  .organism .mid{fill:var(--moss); opacity:.55}
+  .organism .out{fill:var(--sky); opacity:.35}
+  .organism text{font-family:'Fraunces',serif; font-weight:900; font-size:52px; fill:#fff; letter-spacing:-.03em}
+
+  .stats{margin-top:clamp(44px,7vh,86px); display:grid; grid-template-columns:repeat(4,1fr); gap:18px}
+  @media (max-width:820px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{
+    background:var(--cream2); border-radius:34% 66% 40% 60%/48% 40% 60% 52%;
+    padding:30px 24px; text-align:center; box-shadow:var(--sh);
+    transition:border-radius .8s ease, transform .5s cubic-bezier(.2,.8,.2,1);
+  }
+  .stat:hover{border-radius:60% 40% 62% 38%/40% 58% 42% 60%; transform:translateY(-6px)}
+  .stat b{display:block; font-family:'Fraunces',serif; font-weight:900; font-size:clamp(32px,4.2vw,50px);
+    line-height:1; color:var(--forest-d); font-variant-numeric:tabular-nums}
+  .stat span{display:block; margin-top:8px; font-size:12.5px; font-weight:600; color:var(--dim)}
+
+  /* ---------- 波浪分隔 ---------- */
+  .wave{display:block; width:100%; height:clamp(50px,7vw,110px)}
+  .band{background:var(--cream2)}
+
+  /* ---------- About ---------- */
+  .about{display:grid; grid-template-columns:1fr 1fr; gap:clamp(24px,4vw,60px); align-items:center}
+  @media (max-width:900px){.about{grid-template-columns:1fr}}
+  .about .body{margin-top:20px; font-size:clamp(16px,1.8vw,20px); color:var(--dim)}
+  .leafgrid{display:grid; grid-template-columns:repeat(2,1fr); gap:16px}
+  .leafgrid div{
+    aspect-ratio:1/1; display:grid; place-items:center; box-shadow:var(--sh);
+    font-family:'Fraunces',serif; font-weight:900; font-size:clamp(20px,2.6vw,30px); color:#fff;
+    transition:border-radius .8s ease, transform .6s cubic-bezier(.2,.8,.2,1);
+  }
+  .leafgrid div:nth-child(1){background:var(--forest); border-radius:64% 36% 40% 60%/50% 44% 56% 50%}
+  .leafgrid div:nth-child(2){background:var(--clay); border-radius:38% 62% 60% 40%/56% 38% 62% 44%}
+  .leafgrid div:nth-child(3){background:var(--sky-d); border-radius:44% 56% 36% 64%/62% 48% 52% 38%}
+  .leafgrid div:nth-child(4){background:var(--moss); border-radius:58% 42% 56% 44%/40% 60% 40% 60%}
+  .leafgrid div:hover{transform:rotate(-6deg) scale(1.04)}
+
+  /* ---------- Services ---------- */
+  .svcs{margin-top:clamp(32px,5vh,60px); display:grid; grid-template-columns:repeat(2,1fr); gap:20px}
+  @media (max-width:840px){.svcs{grid-template-columns:1fr}}
+  .svc{
+    background:var(--cream); border:1px solid rgba(38,105,31,.14); border-radius:var(--r);
+    padding:clamp(24px,3vw,38px); box-shadow:var(--sh);
+    transition:transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .5s, border-color .4s;
+  }
+  .svc:hover{transform:translateY(-7px); box-shadow:0 20px 46px rgba(23,64,15,.16); border-color:rgba(38,105,31,.32)}
+  .svc .ic{
+    width:56px; height:56px; display:grid; place-items:center; color:#fff;
+    font-family:'Fraunces',serif; font-weight:900; font-size:18px;
+    border-radius:58% 42% 46% 54%/50% 56% 44% 50%;
+    transition:border-radius .8s ease;
+  }
+  .svc:hover .ic{border-radius:40% 60% 62% 38%/58% 42% 58% 42%}
+  .svc h3{margin-top:20px; font-family:'Fraunces','Noto Sans TC',serif; font-weight:600;
+    font-size:clamp(23px,2.8vw,32px); letter-spacing:-.02em}
+  .svc em{font-style:normal; display:block; margin-top:5px; font-size:11.5px; font-weight:700;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--moss)}
+  .svc p{margin-top:14px; font-size:15px; color:var(--dim)}
+
+  /* ---------- Works ---------- */
+  .works{margin-top:clamp(32px,5vh,60px); display:grid; grid-template-columns:repeat(3,1fr); gap:22px}
+  @media (max-width:960px){.works{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:600px){.works{grid-template-columns:1fr}}
+  .work{
+    text-decoration:none; display:block; background:var(--cream); border-radius:var(--r); overflow:hidden;
+    border:1px solid rgba(38,105,31,.14); box-shadow:var(--sh);
+    transition:transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .5s;
+  }
+  .work:hover{transform:translateY(-8px); box-shadow:0 22px 48px rgba(23,64,15,.18)}
+  .work .art{height:180px; position:relative; overflow:hidden}
+  .work .art i{position:absolute; inset:0; transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+  .work:hover .art i{transform:scale(1.08)}
+  .work .art b{
+    position:absolute; left:16px; bottom:14px; z-index:2; padding:6px 14px; border-radius:999px;
+    background:rgba(247,244,233,.92); font-size:11.5px; font-weight:700; color:var(--forest-d);
+  }
+  .work .txt{padding:20px 22px 24px}
+  .work .txt h4{font-family:'Fraunces','Noto Serif TC',serif; font-weight:600; font-size:20px; letter-spacing:-.02em}
+  .work .txt span{display:block; margin-top:6px; font-size:13.5px; color:var(--dim)}
+
+  /* ---------- Process ---------- */
+  .steps{margin-top:clamp(32px,5vh,60px); display:grid; grid-template-columns:repeat(4,1fr); gap:20px}
+  @media (max-width:880px){.steps{grid-template-columns:repeat(2,1fr)}}
+  .step{text-align:center}
+  .step b{
+    display:inline-grid; place-items:center; width:66px; height:66px; color:#fff;
+    font-family:'Fraunces',serif; font-weight:900; font-size:19px;
+    border-radius:56% 44% 48% 52%/50% 54% 46% 50%; box-shadow:var(--sh);
+    transition:border-radius .9s ease;
+  }
+  .step:hover b{border-radius:40% 60% 60% 40%/58% 40% 60% 42%}
+  .step h3{margin-top:18px; font-family:'Fraunces','Noto Serif TC',serif; font-weight:600; font-size:23px}
+  .step em{font-style:normal; display:block; margin-top:4px; font-size:11px; font-weight:700;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--moss)}
+  .step p{margin-top:12px; font-size:14.5px; color:var(--dim)}
+
+  /* ---------- Voices ---------- */
+  .quotes{margin-top:clamp(32px,5vh,60px); display:grid; grid-template-columns:repeat(3,1fr); gap:22px}
+  @media (max-width:900px){.quotes{grid-template-columns:1fr}}
+  .quote{
+    background:var(--cream); border-radius:var(--r); padding:30px;
+    border:1px solid rgba(38,105,31,.14); box-shadow:var(--sh);
+  }
+  .quote p{font-family:'Fraunces','Noto Serif TC',serif; font-style:italic; font-size:18px; line-height:1.5}
+  .quote footer{margin-top:20px; display:flex; align-items:center; gap:12px; font-size:13px; color:var(--dim); font-weight:600}
+  .quote footer i{
+    width:38px; height:38px; display:grid; place-items:center; font-style:normal; color:#fff;
+    font-family:'Fraunces',serif; font-weight:900; font-size:15px;
+    border-radius:60% 40% 52% 48%/48% 58% 42% 52%;
+  }
+
+  /* ---------- Contact ---------- */
+  .ct{margin-top:clamp(32px,5vh,60px); display:grid; grid-template-columns:1fr 1.15fr; gap:22px}
+  @media (max-width:900px){.ct{grid-template-columns:1fr}}
+  .ct > div{background:var(--cream); border-radius:var(--r); padding:clamp(26px,3.4vw,42px);
+    border:1px solid rgba(38,105,31,.14); box-shadow:var(--sh)}
+  .ct-list{margin-top:20px; display:grid; gap:14px}
+  .ct-list div{display:flex; gap:16px; align-items:baseline; font-size:15px}
+  .ct-list span{font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--moss); min-width:64px}
+  .ct-list a{text-decoration:none; border-bottom:2px solid rgba(38,105,31,.3); font-weight:600}
+  .ct-list a:hover{border-color:var(--forest)}
+  form{display:grid; gap:16px}
+  .fld label{display:block; font-size:11.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--moss); margin-bottom:8px}
+  .fld input,.fld select,.fld textarea{
+    width:100%; padding:14px 18px; border-radius:18px; border:1px solid rgba(38,105,31,.2);
+    background:var(--cream2); color:var(--ink); outline:none;
+    font:400 15.5px/1.5 'Karla','Noto Sans TC',sans-serif;
+    transition:border-color .3s, box-shadow .3s, background .3s;
+  }
+  .fld textarea{resize:vertical; min-height:104px; border-radius:22px}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{
+    border-color:var(--forest); background:#fff; box-shadow:0 0 0 4px rgba(127,166,80,.24)}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+  @media (max-width:560px){.row2{grid-template-columns:1fr}}
+  #formMsg{font-size:13.5px; font-weight:600; color:var(--forest); min-height:1.4em}
+
+  footer.site{padding:30px 0 62px; display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between;
+    font-size:13px; color:var(--dim)}
+  .back{
+    position:fixed; left:16px; bottom:16px; z-index:60; text-decoration:none; padding:12px 20px;
+    border-radius:999px; font-size:13px; font-weight:600; background:var(--forest); color:#fff;
+    box-shadow:0 8px 22px rgba(38,105,31,.3);
+  }
+  .back:hover{background:var(--forest-d); transform:translateY(-2px)}
+
+  .rv{opacity:0; transform:translateY(28px); transition:opacity .95s ease, transform .95s cubic-bezier(.2,.8,.2,1)}
+  .rv.in{opacity:1; transform:none}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important; transition-duration:.01ms!important}
+    .rv{opacity:1; transform:none}
+    #leaves{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="bgdeco" id="bgdeco"></div>
+<canvas id="leaves"></canvas>
+
+<nav class="nav">
+  <a class="brand" href="../index.html">STUDIO 07</a>
+  <a class="l" href="#about">關於</a>
+  <a class="l" href="#services">服務</a>
+  <a class="l" href="#works">作品</a>
+  <a class="l cta" href="#contact">聊聊專案</a>
+</nav>
+
+<div class="shell">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div>
+      <h1>把抽象的想法，<br>養成<em>看得見</em>的東西。</h1>
+      <p class="lede">零柒工作室 — 一間位於台北的獨立設計工作室。品牌識別、網頁設計、動態影像、互動裝置。四個人，一隻貓。</p>
+      <div class="btnrow">
+        <a class="btn" href="#works">看看作品</a>
+        <a class="btn o" href="#contact">聊聊專案</a>
+      </div>
+    </div>
+    <div>
+      <svg class="organism" viewBox="0 0 400 400" aria-hidden="true">
+        <path class="out" id="p3" d=""></path>
+        <path class="mid" id="p2" d=""></path>
+        <path class="core" id="p1" d=""></path>
+        <text x="200" y="218" text-anchor="middle">07</text>
+      </svg>
+    </div>
+  </section>
+</div>
+
+<div class="shell">
+  <div class="stats">
+    <div class="stat rv"><b data-count="8">0</b><span>年經驗</span></div>
+    <div class="stat rv"><b data-count="142">0</b><span>完成專案</span></div>
+    <div class="stat rv"><b data-count="60">0</b><span>合作品牌</span></div>
+    <div class="stat rv"><b data-count="11">0</b><span>設計獎項</span></div>
+  </div>
+</div>
+
+<svg class="wave" viewBox="0 0 1440 110" preserveAspectRatio="none" aria-hidden="true">
+  <path fill="#efe9d8" d="M0,58 C220,110 380,8 620,44 C860,80 1040,16 1240,42 C1330,54 1390,66 1440,60 L1440,110 L0,110 Z"></path>
+</svg>
+
+<div class="band">
+  <div class="shell">
+    <!-- ABOUT -->
+    <section id="about">
+      <div class="about">
+        <div class="rv">
+          <p class="kick">關於 / About</p>
+          <h2>四個人，一隻貓。</h2>
+          <p class="body">我們是一間位於台北的獨立設計工作室。從品牌識別到互動網站，我們相信好設計不只是好看，而是能被理解、被記住、被使用。</p>
+        </div>
+        <div class="leafgrid rv"><div>土</div><div>木</div><div>水</div><div>光</div></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<svg class="wave" viewBox="0 0 1440 110" preserveAspectRatio="none" aria-hidden="true" style="transform:scaleY(-1)">
+  <path fill="#efe9d8" d="M0,58 C200,102 420,14 660,48 C900,82 1080,20 1280,46 C1350,56 1400,64 1440,58 L1440,110 L0,110 Z"></path>
+</svg>
+
+<div class="shell">
+  <!-- SERVICES -->
+  <section id="services">
+    <div class="rv"><p class="kick">服務 / Services</p><h2>我們做什麼</h2>
+      <p class="sub">四條服務線，從識別到落地，一路做到能上線的東西為止。</p></div>
+    <div class="svcs">
+      <div class="svc rv"><div class="ic" style="background:var(--forest)">01</div>
+        <h3>品牌識別</h3><em>Brand Identity</em>
+        <p>標誌設計、視覺系統、品牌準則手冊。從命名到落地，把品牌的個性變成一整套能用的規則。</p></div>
+      <div class="svc rv"><div class="ic" style="background:var(--clay)">02</div>
+        <h3>網頁設計</h3><em>Web Design</em>
+        <p>形象網站、電商平台、產品官網。設計與前端一起做，交付的是能跑的東西，不是圖檔。</p></div>
+      <div class="svc rv"><div class="ic" style="background:var(--sky-d)">03</div>
+        <h3>動態影像</h3><em>Motion Design</em>
+        <p>動態標誌、產品動畫、宣傳影片。讓靜態的識別在螢幕上活起來。</p></div>
+      <div class="svc rv"><div class="ic" style="background:var(--moss)">04</div>
+        <h3>互動裝置</h3><em>Interactive</em>
+        <p>展場裝置、WebGL 體驗、資料視覺化。把數據與空間變成觀眾願意停下來玩的東西。</p></div>
+    </div>
+  </section>
+
+  <!-- WORKS -->
+  <section id="works">
+    <div class="rv"><p class="kick">作品 / Selected Works</p><h2>近期專案</h2></div>
+    <div class="works" id="workGrid"></div>
+  </section>
+
+  <!-- PROCESS -->
+  <section id="process">
+    <div class="rv"><p class="kick">流程 / Process</p><h2>怎麼合作</h2></div>
+    <div class="steps">
+      <div class="step rv"><b style="background:var(--forest)">01</b><h3>探索</h3><em>Discover</em><p>訪談、研究、找出真正的問題</p></div>
+      <div class="step rv"><b style="background:var(--clay)">02</b><h3>定義</h3><em>Define</em><p>策略方向、設計準則、範圍界定</p></div>
+      <div class="step rv"><b style="background:var(--sky-d)">03</b><h3>製作</h3><em>Design</em><p>概念發想、視覺開發、原型測試</p></div>
+      <div class="step rv"><b style="background:var(--moss)">04</b><h3>上線</h3><em>Deliver</em><p>開發交付、驗收、後續維運</p></div>
+    </div>
+  </section>
+
+  <!-- VOICES -->
+  <section id="voices">
+    <div class="rv"><p class="kick">評價 / Voices</p><h2>客戶怎麼說</h2></div>
+    <div class="quotes">
+      <blockquote class="quote rv"><p>「他們不只是做出漂亮的東西，而是真的搞懂了我們的生意。」</p>
+        <footer><i style="background:var(--forest)">陳</i>陳品瑜 — 霧谷咖啡 創辦人</footer></blockquote>
+      <blockquote class="quote rv"><p>「卡了我們半年的問題，他們三週內解決掉。」</p>
+        <footer><i style="background:var(--clay)">林</i>林彥廷 — 明日方舟金融 產品總監</footer></blockquote>
+      <blockquote class="quote rv"><p>「開幕當天，觀眾在那個裝置前排了兩小時的隊。」</p>
+        <footer><i style="background:var(--sky-d)">黃</i>黃詩晴 — 白鹿美術館 策展人</footer></blockquote>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="rv"><p class="kick">聯絡 / Contact</p><h2>開始一個新專案</h2></div>
+    <div class="ct">
+      <div class="rv">
+        <div class="ct-list">
+          <div><span>Email</span><a href="mailto:hello@studio07.tw">hello@studio07.tw</a></div>
+          <div><span>Phone</span><a href="tel:+886227710700">+886 2 2771 0700</a></div>
+          <div><span>Studio</span>台北市大安區信義路四段 07 號 7 樓</div>
+        </div>
+      </div>
+      <div class="rv">
+        <form id="form" novalidate>
+          <div class="row2">
+            <div class="fld"><label for="n">姓名</label><input id="n" placeholder="你的名字" required></div>
+            <div class="fld"><label for="e">Email</label><input id="e" type="email" placeholder="you@example.com" required></div>
+          </div>
+          <div class="fld"><label for="t">專案類型</label>
+            <select id="t"><option>品牌識別</option><option>網頁設計</option><option>動態影像</option><option>互動裝置</option></select></div>
+          <div class="fld"><label for="m">訊息</label><textarea id="m" placeholder="簡單說說你的專案…" required></textarea></div>
+          <div><button class="btn clay" type="submit">送出訊息</button></div>
+          <p id="formMsg"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site">
+    <span>© 2026 STUDIO 07 零柒工作室</span>
+    <span>Style 10 — Organic Biophilic</span>
+  </footer>
+</div>
+
+<a class="back" href="../index.html">← 返回總覽</a>
+
+<script>
+(function () {
+  'use strict';
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- 背景有機色塊 ---- */
+  const deco = document.getElementById('bgdeco');
+  const cols = ['#26691f', '#87ceeb', '#c98a52', '#7fa650', '#4a9dc4'];
+  [[-6, 8, 340], [78, 30, 280], [12, 74, 240], [84, 96, 300], [30, 132, 260], [-4, 168, 300]]
+    .forEach(([l, t, s], i) => {
+      const b = document.createElement('div');
+      b.className = 'blob';
+      b.style.cssText = `left:${l}%;top:${t}vh;width:${s}px;height:${s}px;` +
+        `background:${cols[i % cols.length]};animation-delay:${i * -2.6}s`;
+      deco.appendChild(b);
+    });
+
+  /* ---- 會呼吸的 SVG 有機圖形 ---- */
+  // 用極座標產生封閉的平滑路徑；半徑隨時間以不同頻率起伏 → 看起來像在呼吸
+  function blobPath(cx, cy, baseR, t, seed, wobble) {
+    const N = 10, pts = [];
+    for (let i = 0; i < N; i++) {
+      const a = (Math.PI * 2 * i) / N;
+      const r = baseR * (1 + wobble * (
+        Math.sin(a * 3 + t * .9 + seed) * .5 +
+        Math.sin(a * 2 - t * .6 + seed * 1.7) * .5
+      ));
+      pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
+    }
+    // Catmull-Rom 轉三次貝茲，讓輪廓平順
+    let d = 'M' + pts[0][0].toFixed(1) + ',' + pts[0][1].toFixed(1);
+    for (let i = 0; i < N; i++) {
+      const p0 = pts[(i - 1 + N) % N], p1 = pts[i], p2 = pts[(i + 1) % N], p3 = pts[(i + 2) % N];
+      const c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6;
+      const c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
+      d += 'C' + c1x.toFixed(1) + ',' + c1y.toFixed(1) + ' ' + c2x.toFixed(1) + ',' + c2y.toFixed(1) +
+           ' ' + p2[0].toFixed(1) + ',' + p2[1].toFixed(1);
+    }
+    return d + 'Z';
+  }
+  const p1 = document.getElementById('p1'), p2 = document.getElementById('p2'), p3 = document.getElementById('p3');
+  function drawOrganism(t) {
+    p1.setAttribute('d', blobPath(200, 200, 118, t, 0, .1));
+    p2.setAttribute('d', blobPath(200, 200, 152, t, 2.1, .11));
+    p3.setAttribute('d', blobPath(200, 200, 184, t, 4.3, .12));
+  }
+  drawOrganism(0);
+  if (!reduce) (function breathe(ts) { requestAnimationFrame(breathe); drawOrganism(ts / 1400); })(0);
+
+  /* ---- 作品 ---- */
+  const projects = [
+    ['霧谷咖啡', '品牌識別', '2025', 'linear-gradient(150deg,#3f2a17,#c98a52)'],
+    ['潮汐音樂節', '視覺統籌', '2025', 'linear-gradient(150deg,#164b5e,#87ceeb)'],
+    ['明日方舟金融', '產品官網', '2024', 'linear-gradient(150deg,#17400f,#7fa650)'],
+    ['白鹿美術館', '互動展場', '2024', 'linear-gradient(150deg,#4a3620,#e0c9a6)'],
+    ['NOVA 運動品牌', '電商網站', '2024', 'linear-gradient(150deg,#26691f,#4a9dc4)'],
+    ['城市光譜', '資料視覺化', '2023', 'linear-gradient(150deg,#8b5a2b,#7fa650)']
+  ];
+  const wg = document.getElementById('workGrid');
+  projects.forEach(([n, t, y, g]) => {
+    const a = document.createElement('a');
+    a.className = 'work rv'; a.href = '#';
+    a.innerHTML = '<div class="art"><i style="background:' + g + '"></i><b>' + y + '</b></div>' +
+      '<div class="txt"><h4>' + n + '</h4><span>' + t + '</span></div>';
+    wg.appendChild(a);
+  });
+
+  /* ---- 進場 ---- */
+  const io = new IntersectionObserver(es => {
+    es.forEach((en, i) => {
+      if (!en.isIntersecting) return;
+      setTimeout(() => en.target.classList.add('in'), (i % 6) * 90);
+      io.unobserve(en.target);
+    });
+  }, { threshold: .12, rootMargin: '0px 0px -40px' });
+  document.querySelectorAll('.rv').forEach(el => io.observe(el));
+
+  /* ---- 數字滾動 ---- */
+  const numIO = new IntersectionObserver(es => {
+    es.forEach(en => {
+      if (!en.isIntersecting) return;
+      const el = en.target, end = +el.dataset.count;
+      if (reduce) { el.textContent = end; numIO.unobserve(el); return; }
+      const t0 = performance.now();
+      (function tick(t) {
+        const p = Math.min((t - t0) / 1600, 1);
+        el.textContent = Math.round(end * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(tick);
+      })(t0);
+      numIO.unobserve(el);
+    });
+  }, { threshold: .5 });
+  document.querySelectorAll('[data-count]').forEach(n => numIO.observe(n));
+
+  /* ---- 飄落的葉子 ---- */
+  if (!reduce) {
+    const cv = document.getElementById('leaves'), ctx = cv.getContext('2d');
+    let leaves = [];
+    function fit() {
+      cv.width = document.documentElement.clientWidth;
+      cv.height = document.documentElement.clientHeight;
+      const n = Math.round(cv.width / 46);
+      leaves = Array.from({ length: n }, () => spawn(true));
+    }
+    function spawn(anywhere) {
+      return {
+        x: Math.random() * cv.width,
+        y: anywhere ? Math.random() * cv.height : -20,
+        r: Math.random() * 6 + 4,
+        vy: Math.random() * .32 + .16,
+        sway: Math.random() * 1.4 + .5,
+        phase: Math.random() * Math.PI * 2,
+        rot: Math.random() * Math.PI,
+        vr: (Math.random() - .5) * .012,
+        c: ['#7fa650', '#26691f', '#c98a52', '#87ceeb'][(Math.random() * 4) | 0],
+        a: Math.random() * .3 + .18
+      };
+    }
+    fit(); addEventListener('resize', fit);
+
+    (function fall(ts) {
+      requestAnimationFrame(fall);
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      for (let i = 0; i < leaves.length; i++) {
+        const l = leaves[i];
+        l.y += l.vy;
+        l.x += Math.sin(ts / 1600 + l.phase) * l.sway * .34;
+        l.rot += l.vr;
+        if (l.y > cv.height + 20) leaves[i] = spawn(false);
+        ctx.save();
+        ctx.translate(l.x, l.y); ctx.rotate(l.rot);
+        ctx.globalAlpha = l.a; ctx.fillStyle = l.c;
+        // 葉子形狀：兩段對稱的二次曲線
+        ctx.beginPath();
+        ctx.moveTo(0, -l.r);
+        ctx.quadraticCurveTo(l.r * .85, 0, 0, l.r);
+        ctx.quadraticCurveTo(-l.r * .85, 0, 0, -l.r);
+        ctx.fill();
+        ctx.restore();
+      }
+    })(0);
+  }
+
+  /* ---- 表單 ---- */
+  const form = document.getElementById('form'), msg = document.getElementById('formMsg');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const bad = [...form.querySelectorAll('[required]')].filter(i => !i.value.trim());
+    if (bad.length) { msg.style.color = '#b4452b'; msg.textContent = '還有 ' + bad.length + ' 個欄位沒填'; bad[0].focus(); return; }
+    msg.style.color = 'var(--forest)';
+    msg.textContent = '✓ 已送出 — 這是範例頁，沒有真的寄出。';
+    form.reset();
+  });
+})();
+</script>
+</body>
+</html>

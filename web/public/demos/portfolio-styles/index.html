@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STUDIO 07 — 風格範例總覽</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2212%22%20fill%3D%22%2308080a%22%2F%3E%3Ctext%20x%3D%2232%22%20y%3D%2244%22%20font-family%3D%22Helvetica%2CArial%2Csans-serif%22%20font-size%3D%2234%22%20font-weight%3D%22bold%22%20text-anchor%3D%22middle%22%20fill%3D%22%23ff4d3d%22%3E07%3C%2Ftext%3E%3C%2Fsvg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#08080a; --fg:#f4f4f5; --dim:#8a8a94; --line:#22222a; --card:#101014;
+    --accent:#ff4d3d;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--fg); min-height:100vh;
+    font-family:'Inter','Noto Sans TC',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  /* 背景網格 + 游標光暈 */
+  .grid-bg{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:64px 64px; opacity:.5;
+    mask-image:radial-gradient(circle at 50% 0%,#000 0%,transparent 75%);
+  }
+  .glow{
+    position:fixed; width:600px; height:600px; border-radius:50%; z-index:0; pointer-events:none;
+    background:radial-gradient(circle,rgba(255,77,61,.16),transparent 65%);
+    transform:translate(-50%,-50%); transition:opacity .4s;
+  }
+  .wrap{position:relative; z-index:1; max-width:1320px; margin:0 auto; padding:0 clamp(20px,5vw,56px)}
+
+  header{padding:clamp(80px,14vh,160px) 0 clamp(48px,8vh,88px)}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.28em;
+    text-transform:uppercase; color:var(--accent); margin-bottom:24px;
+  }
+  h1{
+    font-size:clamp(44px,8vw,104px); font-weight:900; line-height:.94; letter-spacing:-.045em;
+  }
+  h1 .thin{font-weight:300; color:var(--dim)}
+  .lede{margin-top:28px; max-width:56ch; font-size:clamp(15px,1.5vw,19px); line-height:1.7; color:var(--dim)}
+  .meta{
+    margin-top:40px; display:flex; flex-wrap:wrap; gap:12px;
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+  }
+  .meta span{border:1px solid var(--line); padding:8px 14px; border-radius:999px; color:var(--dim)}
+
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    gap:20px; padding-bottom:clamp(80px,14vh,140px);
+  }
+  .card{
+    position:relative; display:block; text-decoration:none; color:inherit;
+    background:var(--card); border:1px solid var(--line); border-radius:18px; overflow:hidden;
+    transition:transform .45s cubic-bezier(.2,.8,.2,1), border-color .45s, box-shadow .45s;
+    opacity:0; transform:translateY(28px);
+  }
+  .card.in{opacity:1; transform:none}
+  .card:hover{transform:translateY(-6px); border-color:#3a3a46; box-shadow:0 24px 60px -20px rgba(0,0,0,.8)}
+  .card:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+  /* 每張卡的縮圖：純 CSS 畫出該風格的味道 */
+  .thumb{height:172px; position:relative; overflow:hidden; border-bottom:1px solid var(--line)}
+  .thumb::after{content:''; position:absolute; inset:0; background:linear-gradient(to top,rgba(16,16,20,.55),transparent 60%)}
+
+  .t-swiss{background:#fff}
+  .t-swiss i{position:absolute; background:#000}
+  .t-swiss i:nth-child(1){left:14%; top:20%; width:52%; height:9px}
+  .t-swiss i:nth-child(2){left:14%; top:36%; width:34%; height:9px}
+  .t-swiss i:nth-child(3){right:14%; top:20%; width:56px; height:56px; background:#ff3b21; border-radius:50%}
+  .t-swiss i:nth-child(4){left:14%; bottom:22%; width:72%; height:1px; background:#000}
+
+  .t-glass{background:linear-gradient(135deg,#0080ff,#8b00ff 45%,#ff1493)}
+  .t-glass i{position:absolute; border-radius:16px; background:rgba(255,255,255,.16);
+    border:1px solid rgba(255,255,255,.35); backdrop-filter:blur(8px)}
+  .t-glass i:nth-child(1){left:12%; top:22%; width:46%; height:56%}
+  .t-glass i:nth-child(2){right:12%; top:34%; width:32%; height:40%}
+
+  .t-brut{background:#ffff00}
+  .t-brut i{position:absolute; border:4px solid #000}
+  .t-brut i:nth-child(1){left:10%; top:18%; width:44%; height:44%; background:#ff0000}
+  .t-brut i:nth-child(2){right:12%; top:32%; width:34%; height:46%; background:#0000ff}
+  .t-brut i:nth-child(3){left:10%; bottom:14%; width:70%; height:12px; background:#000; border:0}
+
+  .t-cyber{background:#0d0d0d}
+  .t-cyber i{position:absolute}
+  .t-cyber i:nth-child(1){left:12%; top:26%; width:50%; height:10px; background:#00ff00; box-shadow:0 0 14px #00ff00}
+  .t-cyber i:nth-child(2){left:12%; top:44%; width:32%; height:10px; background:#ff00ff; box-shadow:0 0 14px #ff00ff}
+  .t-cyber i:nth-child(3){left:12%; top:60%; width:40%; height:10px; background:#00ffff; box-shadow:0 0 14px #00ffff}
+  .t-cyber i:nth-child(4){inset:0; background:repeating-linear-gradient(0deg,rgba(0,0,0,.5) 0 2px,transparent 2px 4px)}
+
+  .t-y2k{background:linear-gradient(135deg,#ff69b4,#00ffff)}
+  .t-y2k i{position:absolute; border-radius:50%}
+  .t-y2k i:nth-child(1){left:14%; top:22%; width:76px; height:76px;
+    background:linear-gradient(180deg,#fff,rgba(255,255,255,.1) 50%,#c0c0c0)}
+  .t-y2k i:nth-child(2){right:18%; top:40%; width:52px; height:52px;
+    background:linear-gradient(180deg,#fff,rgba(255,105,180,.3) 50%,#9400d3)}
+  .t-y2k i:nth-child(3){right:34%; top:20%; width:14px; height:14px; background:#fff; border-radius:0;
+    clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)}
+
+  .t-bento{background:#f5f5f7; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(2,1fr); gap:8px; padding:16px}
+  .t-bento i{background:#fff; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .t-bento i:nth-child(1){grid-column:span 2}
+  .t-bento i:nth-child(4){grid-column:span 2}
+
+  .t-kinetic{background:#0a0a0a; display:grid; place-items:center}
+  .t-kinetic b{
+    font-size:52px; font-weight:900; letter-spacing:-.05em; font-style:italic;
+    background:linear-gradient(90deg,#ff4d3d,#ffd60a,#3dd6ff,#ff4d3d);
+    background-size:300% 100%; -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation:slide 4s linear infinite;
+  }
+  @keyframes slide{to{background-position:300% 0}}
+
+  .t-clay{background:linear-gradient(135deg,#e6e6fa,#add8e6)}
+  .t-clay i{position:absolute; border-radius:24px; border:4px solid rgba(255,255,255,.9);
+    box-shadow:inset -3px -3px 10px rgba(0,0,0,.08),6px 6px 14px rgba(0,0,0,.12)}
+  .t-clay i:nth-child(1){left:14%; top:24%; width:40%; height:50%; background:#fdbcb4}
+  .t-clay i:nth-child(2){right:16%; top:34%; width:30%; height:38%; background:#98ff98}
+
+  .t-edit{background:#fff; padding:18px; color:#000}
+  .t-edit i{position:absolute; background:#000}
+  .t-edit i:nth-child(1){left:18px; top:18px; width:40%; height:3px}
+  .t-edit i:nth-child(2){left:18px; top:34px; width:26%; height:3px}
+  .t-edit b{position:absolute; left:18px; top:52px; font-family:Georgia,serif; font-size:64px; line-height:.8; font-weight:400}
+  .t-edit i:nth-child(4){right:18px; top:52px; width:34%; height:44%; background:#111}
+
+  .t-organic{background:#f5f5dc; overflow:hidden}
+  .t-organic i{position:absolute; border-radius:60% 40% 55% 45%/50% 55% 45% 50%}
+  .t-organic i:nth-child(1){left:8%; top:14%; width:120px; height:110px; background:#228b22; opacity:.85;
+    animation:morph 9s ease-in-out infinite}
+  .t-organic i:nth-child(2){right:12%; bottom:10%; width:92px; height:88px; background:#87ceeb;
+    animation:morph 11s ease-in-out infinite reverse}
+  @keyframes morph{50%{border-radius:42% 58% 38% 62%/58% 42% 62% 38%}}
+
+  .t-pixel{background:#1a1a2e; image-rendering:pixelated}
+  .t-pixel i{position:absolute; width:16px; height:16px}
+  .t-pixel i:nth-child(1){left:20%; top:30%; background:#ff004d; box-shadow:16px 0 #ff004d,32px 0 #ff004d,0 16px #ff004d,32px 16px #ff004d,0 32px #ff004d,16px 32px #ff004d,32px 32px #ff004d}
+  .t-pixel i:nth-child(2){right:26%; top:34%; background:#00e756; box-shadow:16px 0 #00e756,0 16px #00e756,16px 16px #00e756,-16px 16px #29adff}
+  .t-pixel i:nth-child(3){left:20%; bottom:20%; background:#ffec27; box-shadow:16px 0 #ffec27,32px 0 #ffec27,48px 0 #ffec27,64px 0 #ffec27}
+
+  .t-webgl{background:radial-gradient(circle at 50% 45%,#1b3a5c,#001f3f 70%)}
+  .t-webgl i{position:absolute; left:50%; top:50%; width:96px; height:96px; margin:-48px 0 0 -48px;
+    background:linear-gradient(145deg,#ffd700,#800020); border-radius:14px;
+    box-shadow:0 20px 40px rgba(0,0,0,.55),inset 0 2px 8px rgba(255,255,255,.4);
+    animation:spin3d 7s linear infinite; transform-style:preserve-3d}
+  @keyframes spin3d{to{transform:rotateY(360deg) rotateX(18deg)}}
+
+  .body{padding:20px 22px 24px}
+  .num{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); letter-spacing:.16em}
+  .name{margin-top:10px; font-size:20px; font-weight:700; letter-spacing:-.02em}
+  .en{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--dim); letter-spacing:.1em; text-transform:uppercase; margin-top:4px}
+  .desc{margin-top:12px; font-size:13.5px; line-height:1.65; color:var(--dim)}
+  .tags{margin-top:16px; display:flex; flex-wrap:wrap; gap:6px}
+  .tags em{
+    font-style:normal; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.08em;
+    padding:5px 9px; border-radius:6px; background:#1a1a20; color:#a5a5b0;
+  }
+
+  footer{border-top:1px solid var(--line); padding:36px 0 60px; color:var(--dim); font-size:13px;
+    display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important}
+    .card{opacity:1; transform:none}
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="glow" id="glow"></div>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Portfolio Style Gallery</p>
+    <h1>12 種風格<br><span class="thin">同一份內容</span></h1>
+    <p class="lede">
+      同一個工作室、同一份文案、同一組作品，用 12 種截然不同的視覺語言重新詮釋。
+      每一頁都是獨立的單一 HTML 檔案，附帶該風格最具代表性的互動效果。
+    </p>
+    <div class="meta">
+      <span>12 Styles</span><span>單檔 HTML</span><span>GSAP · Three.js · Lenis</span><span>Reduced-motion 友善</span>
+    </div>
+  </header>
+
+  <main class="grid" id="grid">
+    <a class="card" href="01-swiss-minimal/index.html">
+      <div class="thumb t-swiss"><i></i><i></i><i></i><i></i></div>
+      <div class="body">
+        <div class="num">01</div><div class="name">瑞士極簡</div><div class="en">Swiss / Minimalism</div>
+        <p class="desc">黑白灰、嚴格網格、無圓角無陰影。留白就是設計，克制到極致反而最有力量。</p>
+        <div class="tags"><em>網格線顯示</em><em>磁性游標</em><em>數字滾動</em></div>
+      </div>
+    </a>
+
+    <a class="card" href="02-glassmorphism/index.html">
+      <div class="thumb t-glass"><i></i><i></i></div>
+      <div class="body">
+        <div class="num">02</div><div class="name">玻璃擬態</div><div class="en">Glassmorphism</div>
+        <p class="desc">霧面玻璃、背景模糊、光線折射。半透明層層堆疊出的空間深度感。</p>
+        <div class="tags"><em>流動光斑</em><em>3D 傾斜卡片</em><em>視差層次</em></div>
+      </div>
+    </a>
+
+    <a class="card" href="03-brutalism/index.html">
+      <div class="thumb t-brut"><i></i><i></i><i></i></div>
+      <div class="body">
+        <div class="num">03</div><div class="name">粗獷主義</div><div class="en">Brutalism</div>
+        <p class="desc">原色、粗黑邊、零過場動畫。刻意的「未完成感」，反設計的設計。</p>
+        <div class="tags"><em>可拖曳視窗</em><em>跑馬燈</em><em>即時翻轉</em></div>
+      </div>
+    </a>
+
+    <a class="card" href="04-cyberpunk/index.html">
+      <div class="thumb t-cyber"><i></i><i></i><i></i><i></i></div>
+      <div class="body">
+        <div class="num">04</div><div class="name">賽博龐克</div><div class="en">Cyberpunk HUD</div>
+        <p class="desc">暗底霓虹、掃描線、故障閃爍。終端機美學混搭反烏托邦科技感。</p>
+        <div class="tags"><em>Glitch 故障</em><em>數字雨</em><em>解碼打字</em></div>
+      </div>
+    </a>
+
+    <a class="card" href="05-y2k/index.html">
+      <div class="thumb t-y2k"><i></i><i></i><i></i></div>
+      <div class="body">
+        <div class="num">05</div><div class="name">千禧美學</div><div class="en">Y2K Aesthetic</div>
+        <p class="desc">桃紅配青藍、鉻金屬質感、亮面泡泡。2000 年對未來的天真想像。</p>
+        <div class="tags"><em>鉻金屬文字</em><em>閃亮游標</em><em>果凍按鈕</em></div>
+      </div>
+    </a>
+
+    <a class="card" href="06-bento-grid/index.html">
+      <div class="thumb t-bento"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="body">
+        <div class="num">06</div><div class="name">便當格</div><div class="en">Bento Grid</div>
+        <p class="desc">大小不一的模組卡片拼成一頁。Apple 發表會式的資訊密度與呼吸感。</p>
+        <div class="tags"><em>格子重排</em><em>FLIP 動畫</em><em>即時互動卡</em></div>
+      </div>
+    </a>
+
+    <a class="card" href="07-kinetic-type/index.html">
+      <div class="thumb t-kinetic"><b>Aa</b></div>
+      <div class="body">
+        <div class="num">07</div><div class="name">動態排版</div><div class="en">Kinetic Typography</div>
+        <p class="desc">文字本身就是主視覺。逐字進場、捲動變形、漸層流動，字會動起來。</p>
+        <div class="tags"><em>逐字拆解</em><em>捲動變形</em><em>無限橫捲</em></div>
+      </div>
+    </a>
+
+    <a class="card" href="08-claymorphism/index.html">
+      <div class="thumb t-clay"><i></i><i></i></div>
+      <div class="body">
+        <div class="num">08</div><div class="name">黏土擬態</div><div class="en">Claymorphism</div>
+        <p class="desc">粉嫩色、圓胖造型、內外雙陰影。像玩具一樣可愛，按下去會回彈。</p>
+        <div class="tags"><em>彈性物理</em><em>按壓回饋</em><em>漂浮方塊</em></div>
+      </div>
+    </a>
+
+    <a class="card" href="09-editorial/index.html">
+      <div class="thumb t-edit"><i></i><i></i><b>A</b><i></i></div>
+      <div class="body">
+        <div class="num">09</div><div class="name">雜誌編排</div><div class="en">Editorial Grid</div>
+        <p class="desc">不對稱網格、首字放大、多欄內文、大圖與引言。印刷品搬上螢幕。</p>
+        <div class="tags"><em>閱讀進度</em><em>圖片視差</em><em>引言浮出</em></div>
+      </div>
+    </a>
+
+    <a class="card" href="10-organic/index.html">
+      <div class="thumb t-organic"><i></i><i></i></div>
+      <div class="body">
+        <div class="num">10</div><div class="name">自然有機</div><div class="en">Organic Biophilic</div>
+        <p class="desc">森綠土棕、流動曲線、不規則有機形狀。柔軟、溫暖、會呼吸的介面。</p>
+        <div class="tags"><em>SVG 變形</em><em>粒子飄浮</em><em>波浪分隔</em></div>
+      </div>
+    </a>
+
+    <a class="card" href="11-pixel-art/index.html">
+      <div class="thumb t-pixel"><i></i><i></i><i></i></div>
+      <div class="body">
+        <div class="num">11</div><div class="name">像素風</div><div class="en">Pixel Art</div>
+        <p class="desc">8-bit 點陣字、限定色盤、硬邊無平滑。復古遊戲機的介面語言。</p>
+        <div class="tags"><em>對話框系統</em><em>Sprite 動畫</em><em>音效回饋</em></div>
+      </div>
+    </a>
+
+    <a class="card" href="12-webgl-3d/index.html">
+      <div class="thumb t-webgl"><i></i></div>
+      <div class="body">
+        <div class="num">12</div><div class="name">立體寫實</div><div class="en">WebGL / 3D</div>
+        <p class="desc">真正的 3D 場景。Three.js 打光、材質、陰影，滑鼠可以繞著看。</p>
+        <div class="tags"><em>Three.js</em><em>捲動運鏡</em><em>即時光影</em></div>
+      </div>
+    </a>
+  </main>
+
+  <footer>
+    <span>© 2026 STUDIO 07 零柒工作室 — 風格範例集</span>
+    <span>內容統一規格見 CONTENT.md</span>
+  </footer>
+</div>
+
+<script>
+  // 游標光暈
+  const glow = document.getElementById('glow');
+  let gx = innerWidth / 2, gy = 200, cx = gx, cy = gy;
+  addEventListener('pointermove', e => { gx = e.clientX; gy = e.clientY; }, { passive: true });
+  (function loop() {
+    cx += (gx - cx) * .08; cy += (gy - cy) * .08;
+    glow.style.transform = `translate(${cx}px,${cy}px) translate(-50%,-50%)`;
+    requestAnimationFrame(loop);
+  })();
+
+  // 卡片依序進場
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (!entry.isIntersecting) return;
+      setTimeout(() => entry.target.classList.add('in'), i * 55);
+      io.unobserve(entry.target);
+    });
+  }, { threshold: .15 });
+  document.querySelectorAll('.card').forEach(c => io.observe(c));
+</script>
+</body>
+</html>

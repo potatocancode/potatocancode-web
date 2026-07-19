@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STUDIO 07 零柒工作室 — 千禧美學</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2212%22%20fill%3D%22%23ff69b4%22%2F%3E%3Ctext%20x%3D%2232%22%20y%3D%2244%22%20font-family%3D%22Helvetica%2CArial%2Csans-serif%22%20font-size%3D%2234%22%20font-weight%3D%22bold%22%20text-anchor%3D%22middle%22%20fill%3D%22%2300ffff%22%3E07%3C%2Ftext%3E%3C%2Fsvg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=Rubik:wght@400;500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --pink:#ff69b4; --cyan:#00ffff; --silver:#c0c0c0; --purple:#9400d3;
+    --deep:#1b0033; --ink:#2a0b45;
+    --chrome:linear-gradient(180deg,#fff 0%,#e8e8f0 26%,#9aa0b5 50%,#e8e8f0 74%,#fff 100%);
+    --gloss:linear-gradient(180deg,rgba(255,255,255,.92) 0%,rgba(255,255,255,.18) 48%,rgba(255,255,255,0) 50%,rgba(255,255,255,.16) 100%);
+    --pad:clamp(18px,4.6vw,60px);
+  }
+  html{scroll-behavior:smooth}
+  body{
+    background:linear-gradient(160deg,#ff9de2 0%,#a0e9ff 28%,#c9a7ff 55%,#ffd6f5 78%,#8be9ff 100%);
+    background-attachment:fixed;
+    color:var(--ink); overflow-x:hidden;
+    font-family:'Rubik','Noto Sans TC',system-ui,sans-serif; font-size:15.5px; line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit}
+  ::selection{background:var(--pink); color:#fff}
+  .tek{font-family:'Michroma','Noto Sans TC',sans-serif; letter-spacing:.02em}
+
+  /* ---------- 背景裝飾 ---------- */
+  .bgdeco{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden}
+  .bgdeco .bub{
+    position:absolute; border-radius:50%; opacity:.55;
+    background:radial-gradient(circle at 32% 28%,#fff 0%,rgba(255,255,255,.5) 18%,rgba(255,105,180,.5) 52%,rgba(148,0,211,.45) 100%);
+    box-shadow:inset -8px -12px 26px rgba(148,0,211,.35), 0 12px 40px rgba(255,105,180,.35);
+    animation:bob 12s ease-in-out infinite;
+  }
+  @keyframes bob{50%{transform:translateY(-42px) rotate(12deg)}}
+  .bgdeco .star{position:absolute; color:#fff; font-size:22px; opacity:.85; animation:twinkle 3s ease-in-out infinite}
+  @keyframes twinkle{50%{opacity:.15; transform:scale(.7) rotate(24deg)}}
+  /* canvas 是 replaced element，inset:0 不會撐開它 —— 必須顯式給寬高 */
+  #sparkles{position:fixed; inset:0; width:100%; height:100%; z-index:999; pointer-events:none}
+
+  .shell{position:relative; z-index:2; max-width:1280px; margin:0 auto; padding:0 var(--pad)}
+
+  /* ---------- 導覽 ---------- */
+  .nav{
+    position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:60;
+    width:min(94vw,900px); display:flex; align-items:center; gap:6px; padding:8px;
+    border-radius:999px; background:rgba(255,255,255,.55); border:2px solid #fff;
+    box-shadow:0 10px 32px rgba(148,0,211,.28), inset 0 2px 0 #fff;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  }
+  /* 鉻金屬漸層在淺色導覽列上對比不足，改用深紫漸層 */
+  .nav .brand{
+    font-family:'Michroma',sans-serif; font-size:14px; text-decoration:none; margin-right:auto; padding-left:12px;
+    background:linear-gradient(180deg,#c2266f 0%,#9400d3 55%,#4d0070 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .nav a.l{text-decoration:none; font-size:13px; font-weight:500; padding:9px 15px; border-radius:999px; color:var(--ink)}
+  .nav a.l:hover{background:linear-gradient(180deg,#fff,var(--pink)); color:#fff}
+  @media (max-width:800px){.nav a.l:not(.cta){display:none}}
+  .cta{
+    background:linear-gradient(180deg,#fff 0%,var(--pink) 45%,#d1348a 100%)!important;
+    color:#fff!important; font-weight:700!important; box-shadow:0 4px 0 #a51f65, inset 0 1px 0 #fff;
+  }
+  .cta:hover{transform:translateY(2px); box-shadow:0 2px 0 #a51f65, inset 0 1px 0 #fff}
+
+  /* ---------- 泡泡面板 ---------- */
+  .panel{
+    position:relative; border-radius:30px; padding:clamp(22px,3vw,38px);
+    background:rgba(255,255,255,.62); border:2px solid #fff;
+    box-shadow:0 18px 46px rgba(148,0,211,.24), inset 0 2px 0 rgba(255,255,255,.95);
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); overflow:hidden;
+  }
+  .panel::before{content:''; position:absolute; inset:2px 2px auto 2px; height:44%; border-radius:28px 28px 60% 60%/28px 28px 24px 24px;
+    background:linear-gradient(180deg,rgba(255,255,255,.75),transparent); pointer-events:none}
+
+  section{padding:clamp(56px,9vh,120px) 0}
+  .kick{
+    display:inline-block; padding:7px 16px; border-radius:999px; font-size:11.5px; font-weight:700;
+    letter-spacing:.2em; text-transform:uppercase; color:#fff;
+    background:linear-gradient(180deg,#fff -20%,var(--purple) 60%,#5c0080 100%);
+    box-shadow:0 4px 0 rgba(92,0,128,.5), inset 0 1px 0 #fff;
+  }
+  h2{
+    margin-top:18px; font-size:clamp(30px,5.4vw,68px); font-weight:900; line-height:1.04; letter-spacing:-.03em;
+    background:var(--chrome); -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 3px 0 rgba(148,0,211,.45)) drop-shadow(0 0 22px rgba(0,255,255,.5));
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{min-height:100svh; display:flex; flex-direction:column; justify-content:center; padding-top:120px}
+  h1{
+    font-size:clamp(40px,9.6vw,140px); line-height:.98; text-transform:uppercase;
+    background:var(--chrome); background-size:100% 400%;
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 4px 0 rgba(148,0,211,.55)) drop-shadow(0 0 30px rgba(0,255,255,.6));
+    animation:chrome 6s ease-in-out infinite;
+  }
+  @keyframes chrome{50%{background-position:0 100%}}
+  h1 .o7{
+    background:linear-gradient(180deg,#fff 0%,var(--cyan) 40%,var(--pink) 70%,var(--purple) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .lede{margin-top:24px; font-size:clamp(16px,1.9vw,22px); font-weight:500; max-width:52ch; color:var(--ink);
+    text-shadow:0 1px 0 rgba(255,255,255,.9)}
+  .btnrow{margin-top:32px; display:flex; flex-wrap:wrap; gap:14px}
+  .btn{
+    position:relative; display:inline-block; text-decoration:none; cursor:pointer; border:0;
+    padding:17px 34px; border-radius:999px; font:700 15px/1 'Rubik','Noto Sans TC',sans-serif; color:#fff;
+    background:linear-gradient(180deg,#fff -10%,var(--pink) 45%,#c2266f 100%);
+    box-shadow:0 6px 0 #8e1a4f, 0 14px 26px rgba(194,38,111,.4), inset 0 1px 0 #fff;
+    transition:transform .12s, box-shadow .12s; overflow:hidden;
+  }
+  .btn::after{content:''; position:absolute; inset:2px 2px auto 2px; height:44%; border-radius:999px;
+    background:linear-gradient(180deg,rgba(255,255,255,.85),transparent); pointer-events:none}
+  .btn:hover{transform:translateY(3px); box-shadow:0 3px 0 #8e1a4f, 0 8px 18px rgba(194,38,111,.4), inset 0 1px 0 #fff}
+  .btn:active{transform:translateY(6px); box-shadow:0 0 0 #8e1a4f, inset 0 1px 0 #fff}
+  .btn.cy{background:linear-gradient(180deg,#fff -10%,var(--cyan) 45%,#00a8b5 100%); color:#053b40;
+    box-shadow:0 6px 0 #007a85, 0 14px 26px rgba(0,168,181,.4), inset 0 1px 0 #fff}
+  .btn.cy:hover{box-shadow:0 3px 0 #007a85, 0 8px 18px rgba(0,168,181,.4), inset 0 1px 0 #fff}
+
+  .stats{margin-top:clamp(44px,7vh,84px); display:grid; grid-template-columns:repeat(4,1fr); gap:16px}
+  @media (max-width:820px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{text-align:center; padding:24px 16px}
+  .stat b{
+    display:block; font-family:'Michroma',sans-serif; font-size:clamp(28px,3.8vw,46px);
+    background:linear-gradient(180deg,#fff,var(--purple) 55%,#4d0070);
+    -webkit-background-clip:text; background-clip:text; color:transparent; font-variant-numeric:tabular-nums;
+  }
+  .stat span{display:block; margin-top:8px; font-size:12px; font-weight:700; letter-spacing:.1em; color:#6a2b8f}
+
+  /* ---------- About ---------- */
+  .about{display:grid; grid-template-columns:1.25fr 1fr; gap:clamp(20px,3.4vw,44px); align-items:center}
+  @media (max-width:900px){.about{grid-template-columns:1fr}}
+  .about p.body{margin-top:20px; font-size:clamp(16px,1.9vw,21px); font-weight:500}
+  .cd{
+    aspect-ratio:1/1; border-radius:50%; position:relative; display:grid; place-items:center;
+    background:conic-gradient(from 0deg,#ff69b4,#00ffff,#9400d3,#ffe600,#ff69b4);
+    box-shadow:0 20px 50px rgba(148,0,211,.4), inset 0 0 0 2px #fff;
+    animation:spin 9s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .cd::before{content:''; position:absolute; inset:8%; border-radius:50%;
+    background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.9),transparent 45%)}
+  .cd .hole{width:26%; height:26%; border-radius:50%; background:rgba(255,255,255,.92);
+    box-shadow:inset 0 0 0 8px rgba(148,0,211,.25); display:grid; place-items:center;
+    font-family:'Michroma',sans-serif; font-size:13px; color:var(--purple)}
+
+  /* ---------- Services ---------- */
+  .svcs{margin-top:clamp(30px,5vh,56px); display:grid; grid-template-columns:repeat(2,1fr); gap:18px}
+  @media (max-width:840px){.svcs{grid-template-columns:1fr}}
+  .svc{transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+  .svc:hover{transform:translateY(-8px) rotate(-.8deg)}
+  .svc .no{
+    display:inline-grid; place-items:center; width:46px; height:46px; border-radius:50%;
+    font-family:'Michroma',sans-serif; font-size:14px; color:#fff;
+    background:linear-gradient(180deg,#fff -20%,var(--cyan) 40%,#0091a8 100%);
+    box-shadow:0 5px 0 #00707f, inset 0 1px 0 #fff;
+  }
+  .svc h3{margin-top:18px; font-size:clamp(22px,2.8vw,32px); font-weight:900; letter-spacing:-.02em; color:var(--ink)}
+  .svc em{font-style:normal; display:block; margin-top:5px; font-family:'Michroma',sans-serif; font-size:10.5px;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--purple)}
+  .svc p{margin-top:14px; font-size:14.5px; color:#432259}
+
+  /* ---------- Works ---------- */
+  .works{margin-top:clamp(30px,5vh,56px); display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
+  @media (max-width:960px){.works{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:600px){.works{grid-template-columns:1fr}}
+  .work{padding:0; text-decoration:none; display:block; transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+  .work:hover{transform:translateY(-9px) scale(1.02)}
+  .work .art{height:170px; position:relative; overflow:hidden}
+  .work .art .g{position:absolute; inset:0}
+  .work .art .sh{position:absolute; inset:0; background:var(--gloss); pointer-events:none}
+  .work .art .badge{
+    position:absolute; right:12px; top:12px; z-index:2; padding:5px 12px; border-radius:999px;
+    background:rgba(255,255,255,.9); font-size:11px; font-weight:700; color:var(--purple);
+  }
+  .work .info{padding:18px 22px 24px}
+  .work .info h4{font-size:19px; font-weight:900; color:var(--ink)}
+  .work .info .m{margin-top:8px; display:flex; justify-content:space-between; font-size:12px; font-weight:500; color:#6a2b8f}
+
+  /* ---------- Process ---------- */
+  .steps{margin-top:clamp(30px,5vh,56px); display:grid; grid-template-columns:repeat(4,1fr); gap:16px}
+  @media (max-width:880px){.steps{grid-template-columns:repeat(2,1fr)}}
+  .step{text-align:center}
+  .step b{
+    display:inline-grid; place-items:center; width:60px; height:60px; border-radius:50%;
+    font-family:'Michroma',sans-serif; font-size:15px; color:#fff;
+    background:linear-gradient(180deg,#fff -20%,var(--pink) 45%,#b02a71 100%);
+    box-shadow:0 6px 0 #862054, inset 0 1px 0 #fff;
+  }
+  .step h3{margin-top:18px; font-size:22px; font-weight:900; color:var(--ink)}
+  .step em{font-style:normal; display:block; margin-top:4px; font-family:'Michroma',sans-serif; font-size:10px;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--purple)}
+  .step p{margin-top:12px; font-size:13.5px; color:#432259}
+
+  /* ---------- Voices ---------- */
+  .quotes{margin-top:clamp(30px,5vh,56px); display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
+  @media (max-width:900px){.quotes{grid-template-columns:1fr}}
+  .quote p{font-size:16.5px; font-weight:500; color:var(--ink)}
+  .quote footer{
+    margin-top:20px; padding-top:14px; border-top:2px dotted rgba(148,0,211,.35);
+    font-size:12.5px; font-weight:700; color:var(--purple); display:flex; align-items:center; gap:10px;
+  }
+  .quote footer i{
+    width:34px; height:34px; border-radius:50%; display:grid; place-items:center; font-style:normal; color:#fff;
+    background:linear-gradient(180deg,#fff -20%,var(--cyan) 40%,#0091a8 100%); box-shadow:inset 0 1px 0 #fff;
+  }
+
+  /* ---------- Contact ---------- */
+  .ct{margin-top:clamp(30px,5vh,56px); display:grid; grid-template-columns:1fr 1.15fr; gap:18px}
+  @media (max-width:900px){.ct{grid-template-columns:1fr}}
+  .ct-list{margin-top:22px; display:grid; gap:12px}
+  .ct-list div{display:flex; gap:14px; align-items:baseline; font-size:14.5px}
+  .ct-list span{font-family:'Michroma',sans-serif; font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--purple); min-width:66px}
+  .ct-list a{text-decoration:none; font-weight:700; border-bottom:2px dotted var(--pink)}
+  form{display:grid; gap:14px}
+  .fld label{display:block; font-size:11.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--purple); margin-bottom:7px}
+  .fld input,.fld select,.fld textarea{
+    width:100%; padding:14px 18px; border-radius:999px; border:2px solid #fff; outline:none;
+    background:rgba(255,255,255,.8); color:var(--ink);
+    font:500 15px/1.4 'Rubik','Noto Sans TC',sans-serif;
+    box-shadow:inset 0 2px 6px rgba(148,0,211,.12);
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .fld textarea{border-radius:22px; resize:vertical; min-height:100px}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--pink); box-shadow:0 0 0 4px rgba(255,105,180,.28)}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  @media (max-width:560px){.row2{grid-template-columns:1fr}}
+  #formMsg{font-size:13px; font-weight:700; color:var(--purple); min-height:1.3em}
+
+  footer.site{
+    padding:30px 0 60px; display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between;
+    font-size:12.5px; font-weight:700; color:#5a2178; text-shadow:0 1px 0 rgba(255,255,255,.8);
+  }
+  .back{
+    position:fixed; left:14px; bottom:14px; z-index:60; text-decoration:none; padding:11px 18px;
+    border-radius:999px; font-size:12.5px; font-weight:700; color:#fff;
+    background:linear-gradient(180deg,#fff -20%,var(--purple) 55%,#4d0070);
+    box-shadow:0 5px 0 #3a0055, inset 0 1px 0 #fff; border:2px solid #fff;
+  }
+  .back:hover{transform:translateY(2px); box-shadow:0 3px 0 #3a0055, inset 0 1px 0 #fff}
+
+  .reveal{opacity:0; transform:translateY(30px) scale(.97);
+    transition:opacity .8s cubic-bezier(.34,1.56,.64,1), transform .8s cubic-bezier(.34,1.56,.64,1)}
+  .reveal.in{opacity:1; transform:none}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important; transition-duration:.01ms!important}
+    .reveal{opacity:1; transform:none}
+    #sparkles{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="bgdeco" id="bgdeco"></div>
+<canvas id="sparkles"></canvas>
+
+<nav class="nav">
+  <a class="brand" href="../index.html">★ STUDIO07</a>
+  <a class="l" href="#about">關於</a>
+  <a class="l" href="#services">服務</a>
+  <a class="l" href="#works">作品</a>
+  <a class="l cta" href="#contact">聊聊專案</a>
+</nav>
+
+<div class="shell">
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1 class="tek">Studio<br><span class="o7">Zero7</span></h1>
+    <p class="lede">把抽象的想法，做成看得見、摸得到、記得住的東西。<br>零柒工作室 ★ 台北獨立設計 ★ EST.2018</p>
+    <div class="btnrow">
+      <a class="btn" href="#works">看看作品 ✦</a>
+      <a class="btn cy" href="#contact">聊聊專案 ✦</a>
+    </div>
+    <div class="stats">
+      <div class="stat panel reveal"><b data-count="8">0</b><span>年經驗</span></div>
+      <div class="stat panel reveal"><b data-count="142">0</b><span>完成專案</span></div>
+      <div class="stat panel reveal"><b data-count="60">0</b><span>合作品牌</span></div>
+      <div class="stat panel reveal"><b data-count="11">0</b><span>設計獎項</span></div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="about">
+      <div class="reveal">
+        <span class="kick">關於 / About</span>
+        <h2 class="tek">四個人，一隻貓。</h2>
+        <p class="body">我們是一間位於台北的獨立設計工作室。從品牌識別到互動網站，我們相信好設計不只是好看，而是能被理解、被記住、被使用。</p>
+      </div>
+      <div class="reveal"><div class="cd"><div class="hole">07</div></div></div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section id="services">
+    <div class="reveal"><span class="kick">服務 / Services</span><h2 class="tek">我們做什麼</h2></div>
+    <div class="svcs">
+      <div class="svc panel reveal"><span class="no">01</span><h3>品牌識別</h3><em>Brand Identity</em>
+        <p>標誌設計、視覺系統、品牌準則手冊。從命名到落地，把品牌的個性變成一整套能用的規則。</p></div>
+      <div class="svc panel reveal"><span class="no">02</span><h3>網頁設計</h3><em>Web Design</em>
+        <p>形象網站、電商平台、產品官網。設計與前端一起做，交付的是能跑的東西，不是圖檔。</p></div>
+      <div class="svc panel reveal"><span class="no">03</span><h3>動態影像</h3><em>Motion Design</em>
+        <p>動態標誌、產品動畫、宣傳影片。讓靜態的識別在螢幕上活起來。</p></div>
+      <div class="svc panel reveal"><span class="no">04</span><h3>互動裝置</h3><em>Interactive</em>
+        <p>展場裝置、WebGL 體驗、資料視覺化。把數據與空間變成觀眾願意停下來玩的東西。</p></div>
+    </div>
+  </section>
+
+  <!-- WORKS -->
+  <section id="works">
+    <div class="reveal"><span class="kick">作品 / Selected Works</span><h2 class="tek">近期專案</h2></div>
+    <div class="works" id="workGrid"></div>
+  </section>
+
+  <!-- PROCESS -->
+  <section id="process">
+    <div class="reveal"><span class="kick">流程 / Process</span><h2 class="tek">怎麼合作</h2></div>
+    <div class="steps">
+      <div class="step panel reveal"><b>01</b><h3>探索</h3><em>Discover</em><p>訪談、研究、找出真正的問題</p></div>
+      <div class="step panel reveal"><b>02</b><h3>定義</h3><em>Define</em><p>策略方向、設計準則、範圍界定</p></div>
+      <div class="step panel reveal"><b>03</b><h3>製作</h3><em>Design</em><p>概念發想、視覺開發、原型測試</p></div>
+      <div class="step panel reveal"><b>04</b><h3>上線</h3><em>Deliver</em><p>開發交付、驗收、後續維運</p></div>
+    </div>
+  </section>
+
+  <!-- VOICES -->
+  <section id="voices">
+    <div class="reveal"><span class="kick">評價 / Voices</span><h2 class="tek">客戶怎麼說</h2></div>
+    <div class="quotes">
+      <blockquote class="quote panel reveal"><p>「他們不只是做出漂亮的東西，而是真的搞懂了我們的生意。」</p>
+        <footer><i>陳</i>陳品瑜 — 霧谷咖啡 創辦人</footer></blockquote>
+      <blockquote class="quote panel reveal"><p>「卡了我們半年的問題，他們三週內解決掉。」</p>
+        <footer><i>林</i>林彥廷 — 明日方舟金融 產品總監</footer></blockquote>
+      <blockquote class="quote panel reveal"><p>「開幕當天，觀眾在那個裝置前排了兩小時的隊。」</p>
+        <footer><i>黃</i>黃詩晴 — 白鹿美術館 策展人</footer></blockquote>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="reveal"><span class="kick">聯絡 / Contact</span><h2 class="tek">開始一個新專案</h2></div>
+    <div class="ct">
+      <div class="panel reveal">
+        <div class="ct-list">
+          <div><span>Email</span><a href="mailto:hello@studio07.tw">hello@studio07.tw</a></div>
+          <div><span>Phone</span><a href="tel:+886227710700">+886 2 2771 0700</a></div>
+          <div><span>Studio</span>台北市大安區信義路四段 07 號 7 樓</div>
+        </div>
+      </div>
+      <div class="panel reveal">
+        <form id="form" novalidate>
+          <div class="row2">
+            <div class="fld"><label for="n">姓名</label><input id="n" placeholder="你的名字" required></div>
+            <div class="fld"><label for="e">Email</label><input id="e" type="email" placeholder="you@example.com" required></div>
+          </div>
+          <div class="fld"><label for="t">專案類型</label>
+            <select id="t"><option>品牌識別</option><option>網頁設計</option><option>動態影像</option><option>互動裝置</option></select></div>
+          <div class="fld"><label for="m">訊息</label><textarea id="m" placeholder="簡單說說你的專案…" required></textarea></div>
+          <button class="btn" type="submit">送出訊息 ✦</button>
+          <p id="formMsg"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site">
+    <span>© 2026 STUDIO 07 零柒工作室</span>
+    <span>Style 05 — Y2K Aesthetic</span>
+  </footer>
+</div>
+
+<a class="back" href="../index.html">← 返回總覽</a>
+
+<script>
+(function () {
+  'use strict';
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- 背景泡泡與星星 ---- */
+  const deco = document.getElementById('bgdeco');
+  const bubbles = [[7, 12, 190], [78, 22, 130], [22, 62, 96], [86, 70, 168], [46, 88, 118], [10, 140, 150], [72, 152, 110]];
+  bubbles.forEach(([l, t, s], i) => {
+    const b = document.createElement('div');
+    b.className = 'bub';
+    b.style.cssText = `left:${l}%;top:${t}vh;width:${s}px;height:${s}px;animation-delay:${i * -1.6}s`;
+    deco.appendChild(b);
+  });
+  const stars = [[16, 30], [64, 8], [90, 44], [34, 76], [56, 120], [80, 132], [12, 96], [44, 46]];
+  stars.forEach(([l, t], i) => {
+    const s = document.createElement('div');
+    s.className = 'star'; s.textContent = '✦';
+    s.style.cssText = `left:${l}%;top:${t}vh;animation-delay:${i * -.42}s`;
+    deco.appendChild(s);
+  });
+
+  /* ---- 作品卡 ---- */
+  const projects = [
+    { n: '霧谷咖啡',      t: '品牌識別',   y: '2025', g: 'linear-gradient(150deg,#ff69b4,#9400d3)' },
+    { n: '潮汐音樂節',    t: '視覺統籌',   y: '2025', g: 'linear-gradient(150deg,#00ffff,#9400d3)' },
+    { n: '明日方舟金融',  t: '產品官網',   y: '2024', g: 'linear-gradient(150deg,#c0c0c0,#7b8bb5)' },
+    { n: '白鹿美術館',    t: '互動展場',   y: '2024', g: 'linear-gradient(150deg,#ffe600,#ff69b4)' },
+    { n: 'NOVA 運動品牌', t: '電商網站',   y: '2024', g: 'linear-gradient(150deg,#00ffff,#4dff9e)' },
+    { n: '城市光譜',      t: '資料視覺化', y: '2023', g: 'linear-gradient(150deg,#9400d3,#00ffff)' }
+  ];
+  const grid = document.getElementById('workGrid');
+  projects.forEach((p, i) => {
+    const a = document.createElement('a');
+    a.className = 'work panel reveal'; a.href = '#';
+    a.innerHTML =
+      '<div class="art"><div class="g" style="background:' + p.g + '"></div><div class="sh"></div>' +
+      '<span class="badge">★ ' + String(i + 1).padStart(2, '0') + '</span></div>' +
+      '<div class="info"><h4>' + p.n + '</h4>' +
+      '<div class="m"><span>' + p.t + '</span><span>' + p.y + '</span></div></div>';
+    grid.appendChild(a);
+  });
+
+  /* ---- 進場 ---- */
+  const io = new IntersectionObserver(es => {
+    es.forEach((en, i) => {
+      if (!en.isIntersecting) return;
+      setTimeout(() => en.target.classList.add('in'), (i % 6) * 85);
+      io.unobserve(en.target);
+    });
+  }, { threshold: .12, rootMargin: '0px 0px -40px' });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  /* ---- 數字滾動 ---- */
+  const numIO = new IntersectionObserver(es => {
+    es.forEach(en => {
+      if (!en.isIntersecting) return;
+      const el = en.target, end = +el.dataset.count;
+      if (reduce) { el.textContent = end; numIO.unobserve(el); return; }
+      const t0 = performance.now();
+      (function tick(t) {
+        const p = Math.min((t - t0) / 1500, 1);
+        el.textContent = Math.round(end * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(tick);
+      })(t0);
+      numIO.unobserve(el);
+    });
+  }, { threshold: .5 });
+  document.querySelectorAll('[data-count]').forEach(n => numIO.observe(n));
+
+  /* ---- 閃亮游標軌跡 ---- */
+  if (!reduce) {
+    const cv = document.getElementById('sparkles'), ctx = cv.getContext('2d');
+    let parts = [];
+    const fit = () => { cv.width = innerWidth; cv.height = innerHeight; };
+    fit(); addEventListener('resize', fit);
+
+    let lastSpawn = 0;
+    addEventListener('pointermove', e => {
+      const now = performance.now();
+      if (now - lastSpawn < 26) return;    // 節流，避免粒子爆量
+      lastSpawn = now;
+      const hues = ['#ff69b4', '#00ffff', '#ffffff', '#9400d3', '#ffe600'];
+      for (let i = 0; i < 2; i++) {
+        parts.push({
+          x: e.clientX + (Math.random() - .5) * 14,
+          y: e.clientY + (Math.random() - .5) * 14,
+          vx: (Math.random() - .5) * 1.4,
+          vy: Math.random() * 1.3 + .35,
+          life: 1,
+          size: Math.random() * 7 + 4,
+          rot: Math.random() * Math.PI,
+          c: hues[(Math.random() * hues.length) | 0]
+        });
+      }
+      if (parts.length > 260) parts = parts.slice(-260);
+    }, { passive: true });
+
+    // 畫一個四角星
+    function star(x, y, r, rot, color, alpha) {
+      ctx.save();
+      ctx.translate(x, y); ctx.rotate(rot);
+      ctx.globalAlpha = alpha; ctx.fillStyle = color;
+      ctx.shadowColor = color; ctx.shadowBlur = 10;
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const rr = i % 2 === 0 ? r : r * .3;
+        const a = (Math.PI / 4) * i;
+        ctx[i ? 'lineTo' : 'moveTo'](Math.cos(a) * rr, Math.sin(a) * rr);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+
+    (function loop() {
+      requestAnimationFrame(loop);
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      for (let i = parts.length - 1; i >= 0; i--) {
+        const p = parts[i];
+        p.x += p.vx; p.y += p.vy; p.vy += .035; p.life -= .022; p.rot += .05;
+        if (p.life <= 0) { parts.splice(i, 1); continue; }
+        star(p.x, p.y, p.size * p.life, p.rot, p.c, Math.min(p.life, 1));
+      }
+    })();
+  }
+
+  /* ---- 表單 ---- */
+  const form = document.getElementById('form'), msg = document.getElementById('formMsg');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const bad = [...form.querySelectorAll('[required]')].filter(i => !i.value.trim());
+    if (bad.length) { msg.textContent = '✦ 還有 ' + bad.length + ' 個欄位沒填喔！'; bad[0].focus(); return; }
+    msg.textContent = '✦ 已送出 — 這是範例頁，沒有真的寄出。';
+    form.reset();
+  });
+})();
+</script>
+</body>
+</html>

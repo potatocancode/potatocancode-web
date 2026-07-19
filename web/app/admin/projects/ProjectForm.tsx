@@ -342,7 +342,9 @@ export default function ProjectForm({ project, action }: Props) {
         defaultValue={project?.tech_stack.join(', ')}
         placeholder="Next.js, TypeScript, Supabase"
       />
-      <Field label="Demo 連結" name="demo_link" type="url" defaultValue={project?.demo_link ?? ''} placeholder="https://" />
+      {/* type="text" 而非 "url"：Demo 也可能是站內靜態範例（例如 /demos/portfolio-styles），
+          瀏覽器的 url 驗證會擋掉相對路徑 */}
+      <Field label="Demo 連結" name="demo_link" defaultValue={project?.demo_link ?? ''} placeholder="https://… 或 /demos/…" />
       <Field label="GitHub 連結" name="github_link" type="url" defaultValue={project?.github_link ?? ''} placeholder="https://github.com/..." />
 
       {/* Media gallery */}
