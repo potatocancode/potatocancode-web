@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STUDIO 07 — 專案管理總表 / Data-Dense Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2212%22%20fill%3D%22%232563EB%22%2F%3E%3Ctext%20x%3D%2232%22%20y%3D%2244%22%20font-family%3D%22Helvetica%2CArial%2Csans-serif%22%20font-size%3D%2234%22%20font-weight%3D%22bold%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%3E07%3C%2Ftext%3E%3C%2Fsvg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     Data-Dense Dashboard
+     設計準則：最小內距、最大資訊量。12-13px 字級、34px 列高、
+     8px 網格間距。所有色彩只用來編碼狀態，不做裝飾。
+     ============================================================ */
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#eef0f4; --panel:#fff; --line:#dcdfe6; --line-soft:#eceef2;
+    --ink:#1f2430; --ink-2:#5b6273; --ink-3:#8b93a5;
+    --accent:#2563eb; --accent-soft:#eaf0fe;
+    --s-run:#2563eb; --s-wait:#f59e0b; --s-done:#22c55e; --s-hold:#94a3b8; --s-late:#ef4444;
+    --grid-gap:8px; --pad:12px; --row-h:34px; --head-h:48px; --side-w:236px;
+    --fs:12.5px;
+    --shadow:0 1px 2px rgba(20,26,40,.06),0 1px 3px rgba(20,26,40,.04);
+  }
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--ink); overflow:hidden;
+    font-family:'Inter','Noto Sans TC',system-ui,sans-serif;
+    font-size:var(--fs); line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+    font-variant-numeric:tabular-nums;
+  }
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+
+  /* ---------- 頂列 ---------- */
+  .topbar{
+    height:var(--head-h); background:var(--panel); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:16px; padding:0 14px; position:relative; z-index:30;
+  }
+  .brand{display:flex; align-items:center; gap:9px; font-weight:700; letter-spacing:-.01em; white-space:nowrap}
+  .brand .mark{
+    width:24px; height:24px; border-radius:6px; background:var(--accent); color:#fff;
+    display:grid; place-items:center; font-size:11px; font-weight:700;
+  }
+  .brand small{color:var(--ink-3); font-weight:500; margin-left:2px}
+  .crumb{color:var(--ink-3); font-size:12px; display:flex; gap:7px; align-items:center}
+  .crumb b{color:var(--ink-2); font-weight:500}
+  .search{
+    margin-left:auto; position:relative; width:min(300px,32vw);
+  }
+  .search input{
+    width:100%; height:30px; border:1px solid var(--line); border-radius:7px; background:#f7f8fa;
+    padding:0 10px 0 30px; font:inherit; font-size:12.5px; color:var(--ink); outline:none;
+    transition:border-color .15s,background .15s,box-shadow .15s;
+  }
+  .search input:focus{border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px var(--accent-soft)}
+  .search svg{position:absolute; left:9px; top:8px; color:var(--ink-3)}
+  .tbtn{
+    height:30px; padding:0 11px; border:1px solid var(--line); border-radius:7px; background:#fff;
+    font:inherit; font-size:12px; font-weight:500; color:var(--ink-2); cursor:pointer;
+    display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+    transition:background .15s,border-color .15s,color .15s;
+  }
+  .tbtn:hover{background:#f4f6f9; border-color:#c8cdd8; color:var(--ink)}
+  .tbtn:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+  .avatar{
+    width:26px; height:26px; border-radius:50%; background:#1f2430; color:#fff;
+    display:grid; place-items:center; font-size:10px; font-weight:700; letter-spacing:.02em;
+  }
+
+  /* ---------- 版面 ---------- */
+  .shell{display:flex; height:calc(100vh - var(--head-h)); height:calc(100dvh - var(--head-h))}
+
+  /* ---------- 篩選側欄 ---------- */
+  .side{
+    width:var(--side-w); flex:none; background:var(--panel); border-right:1px solid var(--line);
+    overflow-y:auto; padding:var(--pad); display:flex; flex-direction:column; gap:14px;
+    /* 底部留白：左下角有固定的「返回總覽」按鈕，不留會蓋到重設鈕 */
+    padding-bottom:56px;
+  }
+  .side::-webkit-scrollbar,.tbody::-webkit-scrollbar,.drawer::-webkit-scrollbar{width:10px;height:10px}
+  .side::-webkit-scrollbar-thumb,.tbody::-webkit-scrollbar-thumb,.drawer::-webkit-scrollbar-thumb{
+    background:#c6cbd6; border-radius:6px; border:3px solid var(--panel)}
+  .tbody::-webkit-scrollbar-thumb{border-color:#fff}
+  .side::-webkit-scrollbar-track{background:transparent}
+
+  .fgroup{border-bottom:1px solid var(--line-soft); padding-bottom:13px}
+  .fgroup:last-of-type{border-bottom:0}
+  .flabel{
+    font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-3); margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .flabel button{
+    border:0; background:none; font:inherit; font-size:10px; letter-spacing:.04em; text-transform:none;
+    color:var(--accent); cursor:pointer; padding:2px 3px; border-radius:4px;
+  }
+  .flabel button:hover{background:var(--accent-soft)}
+
+  .opt{
+    display:flex; align-items:center; gap:8px; height:25px; cursor:pointer; user-select:none;
+    padding:0 5px; margin:0 -5px; border-radius:5px; transition:background .12s;
+  }
+  .opt:hover{background:#f4f6f9}
+  .opt input{
+    appearance:none; width:14px; height:14px; flex:none; border:1.5px solid #b9c0cd; border-radius:3.5px;
+    background:#fff; cursor:pointer; position:relative; transition:background .12s,border-color .12s;
+  }
+  .opt input:checked{background:var(--accent); border-color:var(--accent)}
+  .opt input:checked::after{
+    content:''; position:absolute; left:4px; top:1px; width:4px; height:8px;
+    border:solid #fff; border-width:0 1.7px 1.7px 0; transform:rotate(43deg);
+  }
+  .opt input:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .opt .txt{flex:1; font-size:12.5px; color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .opt .cnt{font-size:10.5px; color:var(--ink-3); font-family:'JetBrains Mono',monospace}
+  .swatch{width:7px; height:7px; border-radius:2px; flex:none}
+
+  .side select,.side input[type=range]{width:100%}
+  .side select{
+    height:29px; border:1px solid var(--line); border-radius:6px; background:#f7f8fa;
+    padding:0 8px; font:inherit; font-size:12.5px; color:var(--ink-2); cursor:pointer; outline:none;
+  }
+  .side select:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+  .rangeval{
+    display:flex; justify-content:space-between; font-size:11px; color:var(--ink-3);
+    font-family:'JetBrains Mono',monospace; margin-bottom:5px;
+  }
+  input[type=range]{
+    appearance:none; height:4px; border-radius:3px; background:#dde1e9; outline:none; cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    appearance:none; width:14px; height:14px; border-radius:50%; background:var(--accent);
+    border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.25); cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:12px; height:12px; border-radius:50%; background:var(--accent);
+    border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.25); cursor:pointer; border-color:#fff;
+  }
+  input[type=range]:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+  .reset{
+    margin-top:auto; height:31px; border:1px solid var(--line); border-radius:7px; background:#fff;
+    font:inherit; font-size:12px; font-weight:500; color:var(--ink-2); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:6px; flex:none;
+  }
+  .reset:hover{background:#fdf2f2; border-color:#f6c6c6; color:#c23b3b}
+
+  /* ---------- 主區 ---------- */
+  .main{flex:1; min-width:0; display:flex; flex-direction:column; padding:var(--grid-gap); gap:var(--grid-gap); overflow:hidden}
+
+  /* 已套用篩選 chips */
+  .chips{display:flex; gap:6px; flex-wrap:wrap; align-items:center; min-height:22px}
+  .chips .none{font-size:11.5px; color:var(--ink-3)}
+  .chip{
+    display:inline-flex; align-items:center; gap:5px; height:22px; padding:0 4px 0 8px;
+    background:var(--accent-soft); color:#1d4ed8; border-radius:5px; font-size:11.5px; font-weight:500;
+  }
+  .chip button{
+    border:0; background:none; color:#1d4ed8; cursor:pointer; font-size:13px; line-height:1;
+    padding:2px 3px; border-radius:3px; opacity:.6;
+  }
+  .chip button:hover{opacity:1; background:rgba(37,99,235,.14)}
+
+  /* KPI 列 */
+  .kpis{display:grid; grid-template-columns:repeat(6,1fr); gap:var(--grid-gap)}
+  .kpi{
+    background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:9px 11px;
+    box-shadow:var(--shadow); min-width:0;
+  }
+  .kpi .k{font-size:10.5px; color:var(--ink-3); letter-spacing:.02em; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis}
+  .kpi .v{
+    font-size:19px; font-weight:700; letter-spacing:-.02em; margin-top:1px;
+    font-family:'JetBrains Mono',monospace; white-space:nowrap;
+  }
+  .kpi .v small{font-size:11px; font-weight:500; color:var(--ink-3); margin-left:2px}
+  .kpi .d{font-size:10.5px; margin-top:1px; display:flex; align-items:center; gap:3px}
+  .up{color:#16a34a} .down{color:#dc2626} .flat{color:var(--ink-3)}
+
+  /* 兩張迷你圖 */
+  .charts{display:grid; grid-template-columns:1fr 1.35fr; gap:var(--grid-gap)}
+  .panel{
+    background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    box-shadow:var(--shadow); padding:10px 12px; min-width:0;
+  }
+  .ptitle{
+    font-size:11px; font-weight:600; color:var(--ink-2); margin-bottom:9px;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+  }
+  .ptitle span{font-weight:400; color:var(--ink-3); font-size:10.5px}
+  .legend{display:flex; flex-wrap:wrap; gap:9px; margin-top:8px; font-size:10.5px; color:var(--ink-2)}
+  .legend i{display:inline-flex; align-items:center; gap:4px; font-style:normal}
+  .stackbar{display:flex; height:20px; border-radius:4px; overflow:hidden; background:#f0f2f6}
+  .stackbar div{transition:width .45s cubic-bezier(.2,.8,.2,1); min-width:0}
+  .bars{display:flex; align-items:flex-end; gap:3px; height:56px}
+  .bars .b{flex:1; background:var(--accent); border-radius:2px 2px 0 0; min-height:2px;
+    transition:height .45s cubic-bezier(.2,.8,.2,1); position:relative; opacity:.85}
+  .bars .b:hover{opacity:1}
+  .bars .b::after{
+    content:attr(data-v); position:absolute; bottom:100%; left:50%; transform:translate(-50%,-4px);
+    background:var(--ink); color:#fff; font-size:10px; padding:2px 5px; border-radius:4px;
+    opacity:0; pointer-events:none; transition:opacity .15s; white-space:nowrap;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .bars .b:hover::after{opacity:1}
+  .xaxis{display:flex; gap:3px; margin-top:4px; font-size:9.5px; color:var(--ink-3)}
+  .xaxis span{flex:1; text-align:center; font-family:'JetBrains Mono',monospace}
+
+  /* ---------- 表格 ---------- */
+  .tablewrap{
+    flex:1; min-height:0; background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    box-shadow:var(--shadow); display:flex; flex-direction:column; overflow:hidden;
+  }
+  .cols{
+    display:grid;
+    grid-template-columns:78px minmax(190px,1.7fr) minmax(120px,1.1fr) 84px 78px 82px 104px 104px 68px 92px 84px;
+    align-items:center;
+  }
+  .thead{
+    border-bottom:1px solid var(--line); background:#f7f8fa; flex:none;
+    position:relative; z-index:2;
+  }
+  .thead .cols > div{
+    padding:0 9px; height:32px; display:flex; align-items:center; gap:4px;
+    font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3);
+    cursor:pointer; user-select:none; white-space:nowrap; overflow:hidden;
+    border-right:1px solid var(--line-soft); transition:color .12s,background .12s;
+  }
+  .thead .cols > div:last-child{border-right:0}
+  .thead .cols > div:hover{color:var(--ink); background:#f0f2f6}
+  .thead .cols > div:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+  .thead .num{justify-content:flex-end}
+  .thead .arrow{opacity:0; font-size:9px; transition:opacity .12s,transform .18s}
+  .thead .sorted{color:var(--accent)}
+  .thead .sorted .arrow{opacity:1}
+  .thead .desc .arrow{transform:rotate(180deg)}
+
+  .tbody{flex:1; min-height:0; overflow:auto; position:relative; background:#fff; contain:strict}
+  .phantom{width:1px}
+  .rows{position:absolute; top:0; left:0; right:0; will-change:transform}
+  .row{
+    height:var(--row-h); border-bottom:1px solid var(--line-soft); cursor:pointer;
+    background:#fff;
+  }
+  .row:nth-child(even){background:#fafbfc}
+  .row:hover{background:var(--accent-soft)}
+  .row.sel{background:#dbe6fd; box-shadow:inset 2px 0 0 var(--accent)}
+  .row > div{
+    padding:0 9px; height:100%; display:flex; align-items:center;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;
+  }
+  .row .num{justify-content:flex-end; font-family:'JetBrains Mono',monospace; font-size:12px}
+  .row .id{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink-3)}
+  .row .nm{font-weight:500; display:block; line-height:var(--row-h)}
+  .row .cl{color:var(--ink-2)}
+  .row .ow{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-2)}
+  .row .dt{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-3)}
+  mark{background:#fde68a; color:inherit; border-radius:2px; padding:0 1px}
+
+  .tag{
+    display:inline-flex; align-items:center; gap:4px; height:18px; padding:0 6px;
+    border-radius:4px; font-size:10.5px; font-weight:600; white-space:nowrap;
+  }
+  .t-run{background:#e6edfd; color:#1d4ed8} .t-wait{background:#fef3e2; color:#b45309}
+  .t-done{background:#e4f8ec; color:#15803d} .t-hold{background:#eef0f4; color:#5b6273}
+  .t-late{background:#fdeaea; color:#b91c1c}
+
+  .prog{display:flex; align-items:center; gap:6px; width:100%}
+  .prog .track{flex:1; height:5px; background:#e8ebf1; border-radius:3px; overflow:hidden; min-width:0}
+  /* display:block 不能省 —— span 預設是 inline，inline 元素吃不到 height */
+  .prog .fill{display:block; height:100%; border-radius:3px; background:var(--accent)}
+  .prog .pct{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--ink-3); width:26px; text-align:right; flex:none}
+
+  .empty{
+    padding:52px 20px; text-align:center; color:var(--ink-3);
+  }
+  .empty b{display:block; color:var(--ink-2); font-size:14px; margin-bottom:5px; font-weight:600}
+
+  /* 狀態列 */
+  .statusbar{
+    height:26px; border-top:1px solid var(--line); background:#f7f8fa; flex:none;
+    display:flex; align-items:center; gap:14px; padding:0 11px;
+    font-size:11px; color:var(--ink-3); font-family:'JetBrains Mono',monospace;
+  }
+  .statusbar b{color:var(--ink-2); font-weight:600}
+  .statusbar .sep{margin-left:auto}
+
+  /* ---------- 明細抽屜 ---------- */
+  .scrim{
+    position:fixed; inset:0; background:rgba(20,26,40,.28); z-index:40;
+    opacity:0; pointer-events:none; transition:opacity .25s;
+  }
+  .scrim.on{opacity:1; pointer-events:auto}
+  .drawer{
+    position:fixed; top:0; right:0; bottom:0; width:min(400px,92vw); z-index:41;
+    background:var(--panel); border-left:1px solid var(--line); box-shadow:-8px 0 32px rgba(20,26,40,.14);
+    transform:translateX(100%); transition:transform .3s cubic-bezier(.2,.8,.2,1);
+    display:flex; flex-direction:column; overflow-y:auto;
+  }
+  .drawer.on{transform:none}
+  .dhead{padding:14px 16px 12px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--panel); z-index:2}
+  .dhead .id{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-3)}
+  .dhead h2{font-size:17px; font-weight:700; letter-spacing:-.02em; margin:3px 0 8px; line-height:1.3}
+  .dclose{
+    position:absolute; top:12px; right:12px; width:26px; height:26px; border-radius:6px;
+    border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--ink-2);
+    display:grid; place-items:center; font-size:15px; line-height:1;
+  }
+  .dclose:hover{background:#f4f6f9; color:var(--ink)}
+  .dbody{padding:14px 16px 22px; display:flex; flex-direction:column; gap:16px}
+  .dgrid{display:grid; grid-template-columns:1fr 1fr; gap:11px}
+  .dcell .k{font-size:10.5px; color:var(--ink-3); letter-spacing:.02em}
+  .dcell .v{font-size:14px; font-weight:600; font-family:'JetBrains Mono',monospace; margin-top:1px}
+  .dsec{border-top:1px solid var(--line-soft); padding-top:13px}
+  .dsec h3{font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); margin-bottom:9px}
+  .tl{display:flex; flex-direction:column; gap:0; position:relative; padding-left:17px}
+  .tl::before{content:''; position:absolute; left:4.5px; top:6px; bottom:12px; width:1px; background:var(--line)}
+  .tl .ev{position:relative; padding:0 0 13px}
+  .tl .ev::before{
+    content:''; position:absolute; left:-17px; top:5px; width:9px; height:9px; border-radius:50%;
+    background:#fff; border:2px solid var(--line);
+  }
+  .tl .ev.on::before{border-color:var(--accent); background:var(--accent)}
+  .tl .ev .t{font-size:12.5px; font-weight:500}
+  .tl .ev .d{font-size:10.5px; color:var(--ink-3); font-family:'JetBrains Mono',monospace}
+
+  /* ---------- 返回總覽 ---------- */
+  .back{
+    position:fixed; left:11px; bottom:11px; z-index:60; text-decoration:none;
+    background:var(--ink); color:#fff; font-size:11.5px; font-weight:500;
+    padding:7px 12px; border-radius:7px; box-shadow:0 3px 12px rgba(20,26,40,.28);
+    transition:background .18s,transform .18s;
+  }
+  .back:hover{background:var(--accent); transform:translateY(-1px)}
+  .back:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+  /* ---------- 響應式 ---------- */
+  @media (max-width:1180px){
+    .kpis{grid-template-columns:repeat(3,1fr)}
+    .charts{grid-template-columns:1fr}
+  }
+  @media (max-width:900px){
+    .side{position:fixed; left:0; top:var(--head-h); bottom:0; z-index:35;
+      transform:translateX(-100%); transition:transform .28s cubic-bezier(.2,.8,.2,1);
+      box-shadow:6px 0 24px rgba(20,26,40,.16)}
+    .side.on{transform:none}
+    .menubtn{display:inline-flex!important}
+    .crumb{display:none}
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .tablewrap{overflow-x:auto}
+    .cols{min-width:1010px}
+  }
+  .menubtn{display:none}
+
+  /* 頂列在窄螢幕會擠不下：收掉次要元素，讓搜尋框吸收剩餘寬度。
+     不用 flex-wrap —— .shell 的高度是用 --head-h 算出來的，頂列一換行就會破版。 */
+  @media (max-width:600px){
+    .topbar{gap:8px; padding:0 10px}
+    .brand{font-size:12.5px}
+    .brand small{display:none}
+    .search{width:auto; flex:1 1 auto; min-width:0; margin-left:2px}
+    .avatar{display:none}
+    #exportBtn{padding:0 9px}
+    #exportBtn .lbl{display:none}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms!important; transition-duration:.01ms!important}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="tbtn menubtn" id="menubtn" aria-label="切換篩選面板">☰</button>
+  <div class="brand"><span class="mark">07</span>STUDIO 07 <small>營運後台</small></div>
+  <nav class="crumb" aria-label="麵包屑">
+    <span>營運</span><span>/</span><b>專案管理總表</b>
+  </nav>
+  <div class="search">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
+    </svg>
+    <input type="search" id="q" placeholder="搜尋專案、客戶、編號…" aria-label="搜尋專案">
+  </div>
+  <button class="tbtn" id="exportBtn">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+      <path d="M12 3v12M7 11l5 5 5-5M4 20h16"/>
+    </svg>
+    <span class="lbl">匯出 CSV</span>
+  </button>
+  <div class="avatar" title="林曉彤 — 專案管理">LHT</div>
+</header>
+
+<div class="shell">
+  <!-- ================= 篩選側欄 ================= -->
+  <aside class="side" id="side" aria-label="篩選條件">
+    <div class="fgroup">
+      <div class="flabel">狀態 <button data-clear="status">清除</button></div>
+      <div id="fStatus"></div>
+    </div>
+    <div class="fgroup">
+      <div class="flabel">服務類型 <button data-clear="type">清除</button></div>
+      <div id="fType"></div>
+    </div>
+    <div class="fgroup">
+      <div class="flabel">負責人 <button data-clear="owner">清除</button></div>
+      <div id="fOwner"></div>
+    </div>
+    <div class="fgroup">
+      <div class="flabel">年份</div>
+      <select id="fYear" aria-label="年份">
+        <option value="">全部年份（2018–2026）</option>
+      </select>
+    </div>
+    <div class="fgroup">
+      <div class="flabel">最低預算</div>
+      <div class="rangeval"><span>NT$ 0</span><span id="budgetVal">不限</span></div>
+      <input type="range" id="fBudget" min="0" max="300" step="10" value="0" aria-label="最低預算（萬元）">
+    </div>
+    <button class="reset" id="resetBtn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+        <path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/>
+      </svg>
+      重設所有篩選
+    </button>
+  </aside>
+
+  <!-- ================= 主區 ================= -->
+  <main class="main">
+    <div class="chips" id="chips"></div>
+
+    <section class="kpis" id="kpis" aria-label="關鍵指標"></section>
+
+    <section class="charts">
+      <div class="panel">
+        <div class="ptitle">狀態分佈 <span id="statusTotal"></span></div>
+        <div class="stackbar" id="stackbar"></div>
+        <div class="legend" id="statusLegend"></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">近 12 個月結案數 <span>單位：件</span></div>
+        <div class="bars" id="bars"></div>
+        <div class="xaxis" id="xaxis"></div>
+      </div>
+    </section>
+
+    <section class="tablewrap">
+      <div class="thead">
+        <div class="cols" id="thead" role="row"></div>
+      </div>
+      <div class="tbody" id="tbody" role="rowgroup" tabindex="0">
+        <div class="phantom" id="phantom"></div>
+        <div class="rows" id="rows"></div>
+      </div>
+      <div class="statusbar">
+        <span>顯示 <b id="shown">0</b> / <b id="total">0</b> 筆</span>
+        <span>已渲染 <b id="rendered">0</b> 列 <span style="opacity:.6">(虛擬捲動)</span></span>
+        <span class="sep">最後同步 <b id="syncTime">—</b></span>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="專案明細" aria-hidden="true">
+  <div class="dhead">
+    <button class="dclose" id="dclose" aria-label="關閉明細">✕</button>
+    <div class="id" id="dId"></div>
+    <h2 id="dName"></h2>
+    <span id="dTag"></span>
+  </div>
+  <div class="dbody" id="dBody"></div>
+</aside>
+
+<a class="back" href="../index.html">← 返回總覽</a>
+
+<script>
+'use strict';
+/* ================================================================
+   Data-Dense Dashboard
+   重點：2,000 筆資料在 DOM 上只保留可視範圍的 ~30 列（虛擬捲動），
+   篩選 / 排序 / KPI / 圖表全部由同一份資料即時重算。
+   ================================================================ */
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- 種子亂數：每次載入結果一致，方便截圖比對 ---------------- */
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rnd = mulberry32(20260718);
+const pick = arr => arr[Math.floor(rnd() * arr.length)];
+const int = (min, max) => min + Math.floor(rnd() * (max - min + 1));
+
+/* ---------------- 主檔 ---------------- */
+const STATUS = [
+  { k:'run',  label:'進行中', color:'#2563eb', cls:'t-run'  },
+  { k:'wait', label:'待驗收', color:'#f59e0b', cls:'t-wait' },
+  { k:'done', label:'已結案', color:'#22c55e', cls:'t-done' },
+  { k:'hold', label:'已暫停', color:'#94a3b8', cls:'t-hold' },
+  { k:'late', label:'逾期',   color:'#ef4444', cls:'t-late' },
+];
+const STATUS_MAP = Object.fromEntries(STATUS.map(s => [s.k, s]));
+const TYPES  = ['品牌識別', '網頁設計', '動態影像', '互動裝置'];
+const OWNERS = [
+  { k:'CYW', name:'陳彥文', role:'創意總監' },
+  { k:'LST', name:'李思婷', role:'設計主任' },
+  { k:'WBR', name:'王柏睿', role:'前端工程' },
+  { k:'LHT', name:'林曉彤', role:'專案管理' },
+];
+const OWNER_MAP = Object.fromEntries(OWNERS.map(o => [o.k, o]));
+
+/* CONTENT.md 的六件代表作固定收錄，其餘由名稱庫組合 */
+const FEATURED = ['霧谷咖啡', '潮汐音樂節', '明日方舟金融', '白鹿美術館', 'NOVA 運動', '城市光譜'];
+const CO_A = ['青禾','日星','萬向','和光','南方','立揚','初日','木頭','風尚','恆隆','斑馬','綠川',
+              '雲品','拾間','無患','海馬','北緯','三分','冶金','橘子','山海','微光','壹貳','漫遊'];
+const CO_B = ['科技','生活','文創','食品','建設','影業','醫療','行銷','出版','旅行','金融','教育',
+              '設計','實業','國際','數位'];
+const PJ = ['品牌重塑','官網改版','形象識別','電商平台','年報設計','展場規劃','產品發表','包裝系統',
+            '互動裝置','動態識別','App 介面','會員系統','視覺統籌','導覽系統','影音企劃','資料視覺化',
+            '募資頁面','週年專案','空間標示','字體訂製'];
+
+function makeClient(){
+  return rnd() < .22 ? pick(FEATURED) : pick(CO_A) + pick(CO_B);
+}
+
+const N = 2000;
+const DATA = [];
+for (let i = 0; i < N; i++){
+  const year   = int(2018, 2026);
+  // 資料截止日是 2026-07-18，2026 年不該出現 8 月以後的更新日期
+  const month  = year === 2026 ? int(1, 7) : int(1, 12);
+  const day    = year === 2026 && month === 7 ? int(1, 18) : int(1, 28);
+  const status = pick(STATUS);
+  const type   = pick(TYPES);
+  const owner  = pick(OWNERS);
+  const budget = int(12, 320) * 10000;                     // NT$ 12 萬 – 320 萬
+  // 已結案才有完整實收；其他狀態按進度比例入帳
+  const prog   = status.k === 'done' ? 100
+               : status.k === 'hold' ? int(10, 60)
+               : status.k === 'late' ? int(55, 95)
+               : status.k === 'wait' ? int(88, 99)
+               : int(5, 85);
+  const ratio  = status.k === 'done' ? 1 : prog / 100 * (0.85 + rnd() * 0.2);
+  const actual = Math.round(budget * ratio / 1000) * 1000;
+  const cost   = Math.round(actual * (0.42 + rnd() * 0.3));
+  const margin = actual > 0 ? (actual - cost) / actual : 0;
+
+  DATA.push({
+    id: 'P' + String(year).slice(2) + '-' + String(i + 1).padStart(4, '0'),
+    name: makeClient().slice(0, 4) + ' ' + pick(PJ),
+    client: makeClient(),
+    type, owner: owner.k, status: status.k, year,
+    budget, actual, cost, margin, prog,
+    updated: year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0'),
+    ts: new Date(year, month - 1, day).getTime(),
+  });
+}
+
+/* ---------------- 格式化 ---------------- */
+const nf  = new Intl.NumberFormat('zh-TW');
+const money = v => 'NT$' + nf.format(Math.round(v / 1000)) + 'K';
+const pct = v => (v * 100).toFixed(1) + '%';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+
+/* ---------------- 篩選狀態 ---------------- */
+const filters = {
+  q: '',
+  status: new Set(),
+  type: new Set(),
+  owner: new Set(),
+  year: '',
+  budget: 0,          // 萬元
+};
+let sortKey = 'ts', sortDir = -1;
+let view = [];
+let selectedId = null;
+
+/* ---------------- 欄位定義 ---------------- */
+const COLS = [
+  { k:'id',      label:'編號',   cls:'id' },
+  { k:'name',    label:'專案名稱' },
+  { k:'client',  label:'客戶',   cls:'cl' },
+  { k:'type',    label:'類型' },
+  { k:'owner',   label:'負責人', cls:'ow' },
+  { k:'status',  label:'狀態' },
+  { k:'budget',  label:'預算',   num:true },
+  { k:'actual',  label:'實收',   num:true },
+  { k:'margin',  label:'毛利率', num:true },
+  { k:'prog',    label:'進度' },
+  { k:'ts',      label:'更新',   cls:'dt' },
+];
+
+/* ================= 側欄選項 ================= */
+function buildOptions(){
+  const mk = (host, items, key) => {
+    host.innerHTML = items.map(it => `
+      <label class="opt">
+        <input type="checkbox" value="${it.v}" data-f="${key}">
+        ${it.color ? `<span class="swatch" style="background:${it.color}"></span>` : ''}
+        <span class="txt">${esc(it.label)}</span>
+        <span class="cnt" data-count="${key}:${it.v}"></span>
+      </label>`).join('');
+  };
+  mk(document.getElementById('fStatus'),
+     STATUS.map(s => ({ v:s.k, label:s.label, color:s.color })), 'status');
+  mk(document.getElementById('fType'),
+     TYPES.map(t => ({ v:t, label:t })), 'type');
+  mk(document.getElementById('fOwner'),
+     OWNERS.map(o => ({ v:o.k, label:o.name + '（' + o.role + '）' })), 'owner');
+
+  const ys = document.getElementById('fYear');
+  for (let y = 2026; y >= 2018; y--){
+    const o = document.createElement('option');
+    o.value = String(y); o.textContent = y + ' 年';
+    ys.appendChild(o);
+  }
+}
+buildOptions();
+
+/* ================= 表頭 ================= */
+function buildHead(){
+  document.getElementById('thead').innerHTML = COLS.map(c => `
+    <div role="columnheader" tabindex="0" data-sort="${c.k}"
+         class="${c.num ? 'num' : ''}" title="點擊依「${c.label}」排序">
+      ${c.label}<span class="arrow">▲</span>
+    </div>`).join('');
+}
+buildHead();
+
+function paintHead(){
+  document.querySelectorAll('#thead [data-sort]').forEach(el => {
+    const on = el.dataset.sort === sortKey;
+    el.classList.toggle('sorted', on);
+    el.classList.toggle('desc', on && sortDir === -1);
+  });
+}
+
+/* ================= 篩選 + 排序 ================= */
+function applyFilters(){
+  const q = filters.q.trim().toLowerCase();
+  const minBudget = filters.budget * 10000;
+
+  view = DATA.filter(d => {
+    if (filters.status.size && !filters.status.has(d.status)) return false;
+    if (filters.type.size   && !filters.type.has(d.type))     return false;
+    if (filters.owner.size  && !filters.owner.has(d.owner))   return false;
+    if (filters.year && String(d.year) !== filters.year)      return false;
+    if (d.budget < minBudget)                                 return false;
+    if (q){
+      const hay = (d.id + ' ' + d.name + ' ' + d.client).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  view.sort((a, b) => {
+    let x = a[sortKey], y = b[sortKey];
+    if (typeof x === 'string') return x.localeCompare(y, 'zh-Hant') * sortDir;
+    return (x - y) * sortDir;
+  });
+
+  paintHead();
+  renderChips();
+  renderCounts();
+  renderKpis();
+  renderCharts();
+  renderRows(true);
+}
+
+/* ================= 已套用篩選 chips ================= */
+function renderChips(){
+  const out = [];
+  const add = (label, fn) => out.push({ label, fn });
+
+  if (filters.q) add('搜尋：' + filters.q, () => { filters.q = ''; document.getElementById('q').value = ''; });
+  filters.status.forEach(v => add('狀態：' + STATUS_MAP[v].label, () => filters.status.delete(v)));
+  filters.type.forEach(v  => add('類型：' + v,                    () => filters.type.delete(v)));
+  filters.owner.forEach(v => add('負責人：' + OWNER_MAP[v].name,  () => filters.owner.delete(v)));
+  if (filters.year)   add('年份：' + filters.year,        () => { filters.year = ''; document.getElementById('fYear').value = ''; });
+  if (filters.budget) add('預算 ≥ ' + filters.budget + ' 萬', () => { filters.budget = 0; document.getElementById('fBudget').value = 0; });
+
+  const host = document.getElementById('chips');
+  if (!out.length){ host.innerHTML = '<span class="none">未套用篩選 — 顯示全部 ' + nf.format(DATA.length) + ' 筆專案</span>'; return; }
+
+  host.innerHTML = out.map((c, i) =>
+    `<span class="chip">${esc(c.label)}<button data-chip="${i}" aria-label="移除 ${esc(c.label)}">✕</button></span>`).join('');
+  host.querySelectorAll('[data-chip]').forEach(btn => {
+    btn.onclick = () => {
+      out[Number(btn.dataset.chip)].fn();
+      syncInputs();
+      applyFilters();
+    };
+  });
+}
+
+/* 各選項在「其他條件已套用」前提下的筆數 */
+function renderCounts(){
+  const base = (skip) => DATA.filter(d => {
+    const q = filters.q.trim().toLowerCase();
+    if (skip !== 'status' && filters.status.size && !filters.status.has(d.status)) return false;
+    if (skip !== 'type'   && filters.type.size   && !filters.type.has(d.type))     return false;
+    if (skip !== 'owner'  && filters.owner.size  && !filters.owner.has(d.owner))   return false;
+    if (filters.year && String(d.year) !== filters.year) return false;
+    if (d.budget < filters.budget * 10000) return false;
+    if (q && !(d.id + ' ' + d.name + ' ' + d.client).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const sets = { status: base('status'), type: base('type'), owner: base('owner') };
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const [key, val] = el.dataset.count.split(':');
+    el.textContent = nf.format(sets[key].filter(d => d[key] === val).length);
+  });
+}
+
+/* ================= KPI ================= */
+function renderKpis(){
+  const n = view.length;
+  const sum = k => view.reduce((a, d) => a + d[k], 0);
+  const actual = sum('actual'), cost = sum('cost');
+  const margin = actual ? (actual - cost) / actual : 0;
+  const late = view.filter(d => d.status === 'late').length;
+  const done = view.filter(d => d.status === 'done').length;
+  const avgProg = n ? view.reduce((a, d) => a + d.prog, 0) / n : 0;
+
+  const cards = [
+    { k:'專案筆數', v:nf.format(n), s:'／' + nf.format(DATA.length),
+      d:n === DATA.length ? '未篩選' : '已篩選 ' + pct(n / DATA.length), cls:'flat' },
+    { k:'預算總額', v:'NT$' + nf.format(Math.round(sum('budget') / 10000)), s:'萬',
+      d:'平均 ' + (n ? nf.format(Math.round(sum('budget') / n / 10000)) : 0) + ' 萬／件', cls:'flat' },
+    { k:'實收金額', v:'NT$' + nf.format(Math.round(actual / 10000)), s:'萬',
+      d:'入帳率 ' + pct(sum('budget') ? actual / sum('budget') : 0), cls:'up' },
+    { k:'平均毛利率', v:pct(margin), s:'',
+      d:margin >= .45 ? '▲ 高於目標 45%' : '▼ 低於目標 45%', cls:margin >= .45 ? 'up' : 'down' },
+    { k:'逾期案件', v:nf.format(late), s:'件',
+      d:n ? pct(late / n) + ' 佔比' : '—', cls:late / (n || 1) > .18 ? 'down' : 'up' },
+    { k:'平均完成度', v:avgProg.toFixed(0) + '%', s:'',
+      d:'已結案 ' + nf.format(done) + ' 件', cls:'flat' },
+  ];
+
+  document.getElementById('kpis').innerHTML = cards.map(c => `
+    <div class="kpi">
+      <div class="k">${c.k}</div>
+      <div class="v">${c.v}<small>${c.s}</small></div>
+      <div class="d ${c.cls}">${c.d}</div>
+    </div>`).join('');
+}
+
+/* ================= 兩張迷你圖 ================= */
+function renderCharts(){
+  // 狀態堆疊條
+  const counts = STATUS.map(s => ({ s, n: view.filter(d => d.status === s.k).length }));
+  const total = view.length || 1;
+  document.getElementById('stackbar').innerHTML = counts.map(c =>
+    `<div style="width:${(c.n / total * 100).toFixed(2)}%;background:${c.s.color}"
+          title="${c.s.label} ${nf.format(c.n)} 件"></div>`).join('');
+  document.getElementById('statusTotal').textContent = nf.format(view.length) + ' 件';
+  document.getElementById('statusLegend').innerHTML = counts.map(c =>
+    `<i><span class="swatch" style="background:${c.s.color}"></span>${c.s.label}
+        <b style="font-family:'JetBrains Mono',monospace">${nf.format(c.n)}</b></i>`).join('');
+
+  // 近 12 個月結案數（以資料集最新月份往回推）
+  const months = [];
+  const end = new Date(2026, 6, 1);                         // 2026-07
+  for (let i = 11; i >= 0; i--){
+    const d = new Date(end.getFullYear(), end.getMonth() - i, 1);
+    months.push({ y:d.getFullYear(), m:d.getMonth(), label:(d.getMonth() + 1) + '月' });
+  }
+  const vals = months.map(mo =>
+    view.filter(d => d.status === 'done' && d.year === mo.y && new Date(d.ts).getMonth() === mo.m).length);
+  const max = Math.max(1, ...vals);
+  document.getElementById('bars').innerHTML = vals.map(v =>
+    `<div class="b" data-v="${v} 件" style="height:${(v / max * 100).toFixed(1)}%"></div>`).join('');
+  document.getElementById('xaxis').innerHTML = months.map(m => `<span>${m.label}</span>`).join('');
+}
+
+/* ================= 虛擬捲動 ================= */
+const ROW_H = 34, OVERSCAN = 6;
+const tbody   = document.getElementById('tbody');
+const phantom = document.getElementById('phantom');
+const rowsEl  = document.getElementById('rows');
+
+function hi(text, q){
+  const s = esc(text);
+  if (!q) return s;
+  const i = s.toLowerCase().indexOf(q);
+  if (i < 0) return s;
+  return s.slice(0, i) + '<mark>' + s.slice(i, i + q.length) + '</mark>' + s.slice(i + q.length);
+}
+
+function rowHtml(d, q){
+  const st = STATUS_MAP[d.status];
+  return `<div class="row cols${d.id === selectedId ? ' sel' : ''}" data-id="${d.id}" role="row" tabindex="-1">
+    <div class="id">${hi(d.id, q)}</div>
+    <div title="${esc(d.name)}"><span class="nm">${hi(d.name, q)}</span></div>
+    <div class="cl" title="${esc(d.client)}">${hi(d.client, q)}</div>
+    <div>${d.type}</div>
+    <div class="ow" title="${OWNER_MAP[d.owner].name}">${d.owner}</div>
+    <div><span class="tag ${st.cls}">${st.label}</span></div>
+    <div class="num">${money(d.budget)}</div>
+    <div class="num">${money(d.actual)}</div>
+    <div class="num" style="color:${d.margin >= .45 ? '#16a34a' : d.margin >= .3 ? '' : '#dc2626'}">${pct(d.margin)}</div>
+    <div><span class="prog">
+      <span class="track"><span class="fill" style="width:${d.prog}%;background:${st.color}"></span></span>
+      <span class="pct">${d.prog}</span>
+    </span></div>
+    <div class="dt">${d.updated}</div>
+  </div>`;
+}
+
+let lastStart = -1, lastEnd = -1;
+function renderRows(force){
+  phantom.style.height = (view.length * ROW_H) + 'px';
+
+  if (!view.length){
+    rowsEl.innerHTML = `<div class="empty">
+      <b>沒有符合條件的專案</b>
+      試著放寬篩選條件，或點右下角「重設所有篩選」。
+    </div>`;
+    rowsEl.style.transform = 'none';
+    lastStart = lastEnd = -1;
+    updateStatusbar(0);
+    return;
+  }
+
+  const top = tbody.scrollTop;
+  const vh  = tbody.clientHeight;
+  const start = Math.max(0, Math.floor(top / ROW_H) - OVERSCAN);
+  const end   = Math.min(view.length, Math.ceil((top + vh) / ROW_H) + OVERSCAN);
+
+  if (!force && start === lastStart && end === lastEnd) return;
+  lastStart = start; lastEnd = end;
+
+  const q = filters.q.trim().toLowerCase();
+  let html = '';
+  for (let i = start; i < end; i++) html += rowHtml(view[i], q);
+
+  rowsEl.style.transform = 'translateY(' + (start * ROW_H) + 'px)';
+  rowsEl.innerHTML = html;
+  updateStatusbar(end - start);
+}
+
+function updateStatusbar(rendered){
+  document.getElementById('shown').textContent    = nf.format(view.length);
+  document.getElementById('total').textContent    = nf.format(DATA.length);
+  document.getElementById('rendered').textContent = rendered;
+}
+
+let ticking = false;
+tbody.addEventListener('scroll', () => {
+  if (ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => { renderRows(false); ticking = false; });
+}, { passive: true });
+
+addEventListener('resize', () => renderRows(true));
+
+/* ================= 明細抽屜 ================= */
+const drawer = document.getElementById('drawer');
+const scrim  = document.getElementById('scrim');
+
+function openDrawer(id){
+  const d = DATA.find(x => x.id === id);
+  if (!d) return;
+  selectedId = id;
+  const st = STATUS_MAP[d.status], ow = OWNER_MAP[d.owner];
+
+  document.getElementById('dId').textContent   = d.id;
+  document.getElementById('dName').textContent = d.name;
+  document.getElementById('dTag').innerHTML    = `<span class="tag ${st.cls}">${st.label}</span>`;
+
+  const rows = [
+    ['客戶', d.client], ['服務類型', d.type],
+    ['負責人', ow.name + '（' + ow.role + '）'], ['年度', d.year + ' 年'],
+    ['預算', 'NT$' + nf.format(d.budget)], ['實收', 'NT$' + nf.format(d.actual)],
+    ['直接成本', 'NT$' + nf.format(d.cost)], ['毛利率', pct(d.margin)],
+  ];
+
+  const steps = ['探索 Discover', '定義 Define', '製作 Design', '上線 Deliver'];
+  const stepAt = Math.min(3, Math.floor(d.prog / 25));
+
+  document.getElementById('dBody').innerHTML = `
+    <div class="dgrid">
+      ${rows.map(([k, v]) => `<div class="dcell"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`).join('')}
+    </div>
+    <div class="dsec">
+      <h3>完成度</h3>
+      <span class="prog">
+        <span class="track" style="height:8px"><span class="fill" style="width:${d.prog}%;background:${st.color}"></span></span>
+        <span class="pct" style="width:34px;font-size:12px">${d.prog}%</span>
+      </span>
+    </div>
+    <div class="dsec">
+      <h3>專案流程</h3>
+      <div class="tl">
+        ${steps.map((s, i) => `
+          <div class="ev ${i <= stepAt ? 'on' : ''}">
+            <div class="t">${s}</div>
+            <div class="d">${i < stepAt ? '已完成' : i === stepAt ? '進行中' : '未開始'}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="dsec">
+      <h3>最後更新</h3>
+      <div class="dcell"><div class="v">${d.updated}</div></div>
+    </div>`;
+
+  drawer.classList.add('on'); scrim.classList.add('on');
+  drawer.setAttribute('aria-hidden', 'false');
+  document.getElementById('dclose').focus();
+  renderRows(true);
+}
+function closeDrawer(){
+  drawer.classList.remove('on'); scrim.classList.remove('on');
+  drawer.setAttribute('aria-hidden', 'true');
+  selectedId = null;
+  renderRows(true);
+}
+rowsEl.addEventListener('click', e => {
+  const row = e.target.closest('.row');
+  if (row) openDrawer(row.dataset.id);
+});
+scrim.onclick = closeDrawer;
+document.getElementById('dclose').onclick = closeDrawer;
+addEventListener('keydown', e => { if (e.key === 'Escape' && drawer.classList.contains('on')) closeDrawer(); });
+
+/* ================= 事件綁定 ================= */
+function syncInputs(){
+  document.querySelectorAll('[data-f]').forEach(el => {
+    el.checked = filters[el.dataset.f].has(el.value);
+  });
+  document.getElementById('budgetVal').textContent =
+    filters.budget ? 'NT$ ' + filters.budget + ' 萬以上' : '不限';
+}
+
+document.getElementById('side').addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.f){
+    const set = filters[el.dataset.f];
+    el.checked ? set.add(el.value) : set.delete(el.value);
+    applyFilters();
+  }
+});
+document.getElementById('fYear').addEventListener('change', e => {
+  filters.year = e.target.value; applyFilters();
+});
+document.getElementById('fBudget').addEventListener('input', e => {
+  filters.budget = Number(e.target.value);
+  document.getElementById('budgetVal').textContent =
+    filters.budget ? 'NT$ ' + filters.budget + ' 萬以上' : '不限';
+  applyFilters();
+});
+document.querySelectorAll('[data-clear]').forEach(btn => {
+  btn.onclick = () => { filters[btn.dataset.clear].clear(); syncInputs(); applyFilters(); };
+});
+
+/* 搜尋：120ms debounce，避免每次按鍵都重算 2000 筆 */
+let qTimer;
+document.getElementById('q').addEventListener('input', e => {
+  clearTimeout(qTimer);
+  qTimer = setTimeout(() => { filters.q = e.target.value; applyFilters(); }, 120);
+});
+
+document.getElementById('thead').addEventListener('click', e => {
+  const h = e.target.closest('[data-sort]');
+  if (!h) return;
+  const k = h.dataset.sort;
+  if (k === sortKey) sortDir *= -1;
+  else { sortKey = k; sortDir = (k === 'ts' || k === 'budget' || k === 'actual' || k === 'margin' || k === 'prog') ? -1 : 1; }
+  tbody.scrollTop = 0;
+  applyFilters();
+});
+document.getElementById('thead').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); e.target.click(); }
+});
+
+document.getElementById('resetBtn').onclick = () => {
+  filters.q = ''; filters.year = ''; filters.budget = 0;
+  filters.status.clear(); filters.type.clear(); filters.owner.clear();
+  document.getElementById('q').value = '';
+  document.getElementById('fYear').value = '';
+  document.getElementById('fBudget').value = 0;
+  syncInputs();
+  tbody.scrollTop = 0;
+  applyFilters();
+};
+
+/* 匯出目前篩選結果（真的會下載） */
+document.getElementById('exportBtn').onclick = () => {
+  const head = ['編號','專案名稱','客戶','類型','負責人','狀態','預算','實收','毛利率','進度','更新日'];
+  const lines = view.map(d => [
+    d.id, d.name, d.client, d.type, OWNER_MAP[d.owner].name, STATUS_MAP[d.status].label,
+    d.budget, d.actual, (d.margin * 100).toFixed(1) + '%', d.prog + '%', d.updated,
+  ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+
+  // ﻿ BOM：沒有它 Excel 開啟中文會變亂碼
+  const blob = new Blob(['﻿' + [head.join(','), ...lines].join('\r\n')],
+                        { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'studio07-projects-' + view.length + '.csv';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
+document.getElementById('menubtn').onclick = () =>
+  document.getElementById('side').classList.toggle('on');
+
+/* 表格區鍵盤捲動 */
+tbody.addEventListener('keydown', e => {
+  const step = { ArrowDown: ROW_H, ArrowUp: -ROW_H, PageDown: tbody.clientHeight, PageUp: -tbody.clientHeight }[e.key];
+  if (step){ e.preventDefault(); tbody.scrollTop += step; }
+  if (e.key === 'Home'){ e.preventDefault(); tbody.scrollTop = 0; }
+  if (e.key === 'End'){ e.preventDefault(); tbody.scrollTop = view.length * ROW_H; }
+});
+
+/* 同步時間（假裝後台在跑） */
+function tickSync(){
+  document.getElementById('syncTime').textContent =
+    new Date().toLocaleTimeString('zh-TW', { hour12:false });
+}
+tickSync();
+if (!reduce) setInterval(tickSync, 1000);
+
+/* ---------------- 啟動 ---------------- */
+syncInputs();
+applyFilters();
+</script>
+</body>
+</html>

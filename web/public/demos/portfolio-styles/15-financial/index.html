@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STUDIO 07 — 財務儀表板 / Financial Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2212%22%20fill%3D%22%23003366%22%2F%3E%3Ctext%20x%3D%2232%22%20y%3D%2244%22%20font-family%3D%22Georgia%2Cserif%22%20font-size%3D%2234%22%20font-weight%3D%22bold%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%3E07%3C%2Ftext%3E%3C%2Fsvg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<style>
+  /* ============================================================
+     Financial Dashboard
+     設計準則：數字是主角。等寬數字對齊、小數位一致、綠賺紅賠，
+     每個金額都標明幣別與單位，不讓人猜。
+     ============================================================ */
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#f4f6f8; --panel:#fff; --line:#e3e7ed; --line-2:#eef1f5;
+    --navy:#003366; --navy-2:#0b4a8f; --navy-soft:#eaf1f9;
+    --ink:#16202e; --ink-2:#4d5769; --ink-3:#8a93a3;
+    --profit:#22c55e; --profit-d:#15803d; --loss:#ef4444; --loss-d:#b91c1c;
+    --gap:14px;
+    --shadow:0 1px 2px rgba(16,32,46,.05),0 2px 8px rgba(16,32,46,.04);
+  }
+  body{
+    background:var(--bg); color:var(--ink); min-height:100vh;
+    font-family:'Inter','Noto Sans TC',system-ui,sans-serif; font-size:13.5px; line-height:1.5;
+    -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums;
+  }
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+  .serif{font-family:'Source Serif 4',Georgia,serif}
+
+  /* ---------- 頂列 ---------- */
+  .topbar{
+    background:var(--navy); color:#fff; padding:0 20px; height:56px;
+    display:flex; align-items:center; gap:18px; position:sticky; top:0; z-index:30;
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:-.01em; white-space:nowrap}
+  .brand .mark{
+    width:26px; height:26px; border-radius:7px; background:#fff; color:var(--navy);
+    display:grid; place-items:center; font-size:11.5px; font-weight:700;
+  }
+  .brand small{color:rgba(255,255,255,.62); font-weight:500}
+  .fiscal{
+    margin-left:auto; display:flex; align-items:center; gap:8px;
+    font-size:11.5px; color:rgba(255,255,255,.68); white-space:nowrap;
+  }
+  .fiscal b{color:#fff; font-weight:600; font-family:'JetBrains Mono',monospace}
+
+  /* 期間切換 */
+  .periods{display:flex; background:rgba(255,255,255,.1); border-radius:8px; padding:3px; gap:2px}
+  .periods button{
+    border:0; background:none; color:rgba(255,255,255,.72); font:inherit; font-size:12px; font-weight:500;
+    padding:5px 11px; border-radius:6px; cursor:pointer; white-space:nowrap; transition:.16s;
+  }
+  .periods button:hover{color:#fff; background:rgba(255,255,255,.08)}
+  .periods button[aria-pressed=true]{background:#fff; color:var(--navy); font-weight:600}
+  .periods button:focus-visible{outline:2px solid #fff; outline-offset:1px}
+
+  /* ---------- 內容 ---------- */
+  .wrap{max-width:1480px; margin:0 auto; padding:var(--gap) 20px 60px; display:flex; flex-direction:column; gap:var(--gap)}
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:11px; box-shadow:var(--shadow); min-width:0}
+  .phead{
+    padding:14px 16px 0; display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  }
+  .phead h2{font-size:13.5px; font-weight:600; letter-spacing:-.01em}
+  .phead .sub{font-size:11px; color:var(--ink-3); font-family:'JetBrains Mono',monospace}
+
+  /* ---------- KPI ---------- */
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:var(--gap)}
+  .kpi{padding:16px 18px 15px; position:relative; overflow:hidden}
+  .kpi .k{font-size:11.5px; color:var(--ink-3); letter-spacing:.02em; display:flex; align-items:center; gap:6px}
+  .kpi .cur{
+    font-size:9.5px; font-weight:700; letter-spacing:.06em; color:var(--ink-3);
+    border:1px solid var(--line); border-radius:4px; padding:1px 4px;
+  }
+  .kpi .v{
+    font-family:'Source Serif 4',Georgia,serif; font-size:33px; font-weight:700; letter-spacing:-.025em;
+    line-height:1.12; margin-top:6px; font-variant-numeric:tabular-nums;
+  }
+  .kpi .v .unit{font-size:14px; font-weight:600; color:var(--ink-3); margin-left:3px; letter-spacing:0}
+  .kpi .d{margin-top:7px; display:flex; align-items:center; gap:7px; font-size:11.5px; flex-wrap:wrap}
+  .delta{
+    display:inline-flex; align-items:center; gap:3px; font-weight:600;
+    font-family:'JetBrains Mono',monospace; padding:2px 6px; border-radius:5px; font-size:11px;
+  }
+  .delta.up{background:#e6f9ee; color:var(--profit-d)}
+  .delta.down{background:#fdecec; color:var(--loss-d)}
+  .kpi .note{color:var(--ink-3)}
+  .spark{margin-top:10px; height:30px; width:100%; display:block}
+
+  /* ---------- 圖表 ---------- */
+  .row-a{display:grid; grid-template-columns:1.62fr 1fr; gap:var(--gap)}
+  .row-b{display:grid; grid-template-columns:1fr 1.35fr; gap:var(--gap)}
+  .chart{width:100%; height:300px}
+  .chart.sm{height:250px}
+  .chartbox{padding:6px 8px 10px}
+
+  .hint{
+    margin:0 16px 12px; padding:8px 11px; background:var(--navy-soft); border-radius:7px;
+    font-size:11.5px; color:var(--navy-2); line-height:1.55;
+  }
+  .hint b{font-weight:600}
+
+  /* ---------- 帳齡表 ---------- */
+  table{width:100%; border-collapse:collapse; font-size:12.5px}
+  thead th{
+    background:#f7f9fb; border-bottom:1px solid var(--line); text-align:right;
+    padding:9px 12px; font-size:10.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+    color:var(--ink-3); white-space:nowrap; position:sticky; top:0;
+  }
+  thead th:first-child{text-align:left}
+  tbody td{
+    padding:9px 12px; text-align:right; border-bottom:1px solid var(--line-2);
+    font-family:'JetBrains Mono',monospace; white-space:nowrap;
+  }
+  tbody td:first-child{text-align:left; font-family:'Inter','Noto Sans TC',sans-serif}
+  tbody tr:hover{background:#f7f9fb}
+  tbody tr.warn td{background:#fffaf0}
+  tbody tr.warn:hover td{background:#fff5e3}
+  tfoot td{
+    padding:11px 12px; text-align:right; font-family:'JetBrains Mono',monospace; font-weight:700;
+    border-top:2px solid var(--navy); background:#f7f9fb; white-space:nowrap;
+  }
+  tfoot td:first-child{text-align:left; font-family:'Inter','Noto Sans TC',sans-serif; letter-spacing:.02em}
+  .tscroll{overflow-x:auto; max-height:330px; overflow-y:auto}
+  .tscroll::-webkit-scrollbar{width:9px; height:9px}
+  .tscroll::-webkit-scrollbar-thumb{background:#ccd3dd; border-radius:5px}
+  .aged{display:inline-flex; align-items:center; gap:5px}
+  .aged .bar{width:34px; height:5px; border-radius:3px; background:#e8ecf2; overflow:hidden; flex:none}
+  .aged .bar i{display:block; height:100%; background:var(--loss)}
+  .pos{color:var(--profit-d)} .neg{color:var(--loss-d)}
+
+  /* ---------- 頁尾 ---------- */
+  footer{
+    text-align:center; color:var(--ink-3); font-size:11.5px; padding-top:6px; line-height:1.7;
+  }
+
+  /* ---------- 返回總覽 ---------- */
+  .back{
+    position:fixed; left:14px; bottom:14px; z-index:60; text-decoration:none;
+    background:var(--navy); color:#fff; font-size:11.5px; font-weight:500;
+    padding:8px 13px; border-radius:8px; box-shadow:0 4px 14px rgba(0,51,102,.32); transition:.18s;
+  }
+  .back:hover{background:var(--navy-2); transform:translateY(-1px)}
+  .back:focus-visible{outline:2px solid var(--navy); outline-offset:2px}
+
+  /* ---------- 響應式 ---------- */
+  @media (max-width:1180px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .row-a,.row-b{grid-template-columns:1fr}
+  }
+  @media (max-width:640px){
+    .kpis{grid-template-columns:1fr}
+    .topbar{height:auto; padding:10px 14px; flex-wrap:wrap; gap:10px}
+    .fiscal{margin-left:0; width:100%; order:3}
+    .periods{width:100%; order:2}
+    .periods button{flex:1}
+    .wrap{padding:10px 12px 60px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms!important; transition-duration:.01ms!important}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="mark">07</span>STUDIO 07 <small>財務儀表板</small></div>
+  <div class="periods" role="group" aria-label="統計期間">
+    <button data-p="6"  aria-pressed="false">近 6 個月</button>
+    <button data-p="12" aria-pressed="true">近 12 個月</button>
+    <button data-p="24" aria-pressed="false">近 24 個月</button>
+  </div>
+  <div class="fiscal">
+    會計年度 <b>2026</b> · 幣別 <b>TWD</b> · 結帳日 <b id="closeDate">—</b>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ================= KPI ================= -->
+  <section class="kpis" id="kpis" aria-label="財務關鍵指標"></section>
+
+  <!-- ================= K 線 + 圓餅 ================= -->
+  <div class="row-a">
+    <section class="panel">
+      <div class="phead">
+        <h2>現金部位月 K 線</h2>
+        <span class="sub" id="kSub">單位：新台幣萬元</span>
+      </div>
+      <p class="hint">
+        每根 K 棒代表一個月的現金部位：<b>開盤＝月初餘額</b>、<b>收盤＝月底餘額</b>、
+        影線是月內的最高與最低點。下方長條為當月營收。
+        <b>紅漲綠跌</b>依台股慣例。
+      </p>
+      <div class="chartbox"><div class="chart" id="chartK"></div></div>
+    </section>
+
+    <section class="panel">
+      <div class="phead">
+        <h2>服務別營收佔比</h2>
+        <span class="sub">佔期間總營收</span>
+      </div>
+      <div class="chartbox"><div class="chart" id="chartPie"></div></div>
+    </section>
+  </div>
+
+  <!-- ================= 瀑布 + 帳齡 ================= -->
+  <div class="row-b">
+    <section class="panel">
+      <div class="phead">
+        <h2>損益結構</h2>
+        <span class="sub">營收 → 稅後淨利</span>
+      </div>
+      <div class="chartbox"><div class="chart sm" id="chartWf"></div></div>
+    </section>
+
+    <section class="panel">
+      <div class="phead">
+        <h2>應收帳款帳齡</h2>
+        <span class="sub" id="arSub">—</span>
+      </div>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th>客戶／專案</th><th>發票金額</th><th>已收</th><th>未收</th><th>帳齡</th>
+            </tr>
+          </thead>
+          <tbody id="arBody"></tbody>
+          <tfoot id="arFoot"></tfoot>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- ================= 月營收 vs 預算 ================= -->
+  <section class="panel">
+    <div class="phead">
+      <h2>月營收 vs 預算達成</h2>
+      <span class="sub">長條＝實際營收　折線＝預算達成率</span>
+    </div>
+    <div class="chartbox"><div class="chart sm" id="chartBudget"></div></div>
+  </section>
+
+  <footer>
+    © 2026 STUDIO 07 零柒工作室 · 財務資料為示範用途的虛構數字<br>
+    本頁所有金額均為新台幣、未稅、四捨五入至千元
+  </footer>
+</div>
+
+<a class="back" href="../index.html">← 返回總覽</a>
+
+<script>
+'use strict';
+/* ================================================================
+   Financial Dashboard
+   四張圖共用一份月資料。切換期間時只改 months 的長度，
+   KPI 用 count-up 重新滾動，圖表 setOption 重畫。
+   ================================================================ */
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- 種子亂數 ---------------- */
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rnd = mulberry32(1553);
+
+/* ---------------- 產生 24 個月的財務資料 ---------------- */
+const TYPES = ['品牌識別', '網頁設計', '動態影像', '互動裝置'];
+// 各服務的長期營收權重（與 16-executive 的服務別營收同一組比例）
+const TYPE_WEIGHT = [0.28, 0.41, 0.11, 0.20];
+const TAX_RATE = 0.2;                            // 營利事業所得稅
+const ALL = [];
+let cash = 480;                                  // 起始現金部位（萬元）
+
+for (let i = 23; i >= 0; i--){
+  const d = new Date(2026, 6 - i, 1);            // 最後一個月＝2026-07
+  const m = d.getMonth() + 1;
+  // 台灣的設計案有明顯季節性：Q4 結案潮、農曆年後淡季
+  const season = [.82,.74,.95,1.05,1.02,1.1,1.08,.98,1.06,1.18,1.22,1.3][m - 1];
+  const trend  = 1 + (23 - i) * 0.011;           // 逐年成長
+  const revenue = Math.round(210 * season * trend * (.88 + rnd() * .26));
+  const cost    = Math.round(revenue * (.44 + rnd() * .14));
+  const opex    = Math.round(78 + rnd() * 26);
+  const profit  = revenue - cost - opex;
+
+  const open = cash;
+  // 現金不會只進不出：發薪、設備採購、股東分紅都在這裡扣，
+  // 約三分之一的月份現金是淨流出（K 線才會有紅有綠）
+  // 流出要小於留存獲利，現金長期才會往上走（否則 K 線一路下跌到負數）
+  const outflow = rnd() < .3 ? Math.round(40 + rnd() * 110) : 0;
+  cash = Math.max(180, Math.round(cash + profit * (.7 + rnd() * .5) - outflow));
+  const high = Math.round(Math.max(open, cash) + rnd() * 55);
+  const low  = Math.round(Math.min(open, cash) - rnd() * 48);
+
+  ALL.push({
+    label: (d.getFullYear() + '').slice(2) + '/' + String(m).padStart(2, '0'),
+    year: d.getFullYear(), month: m,
+    revenue, cost, opex, profit, outflow,
+    budget: Math.round(210 * season * trend),
+    open, close: cash, high, low,
+    // 以長期權重為基準，每月上下小幅浮動
+    mix: TYPE_WEIGHT.map(w => w * (.82 + rnd() * .36)),
+  });
+}
+
+let period = 12;
+let months = [];
+
+/* ---------------- 格式化 ---------------- */
+const nf = new Intl.NumberFormat('zh-TW');
+const wan   = v => nf.format(Math.round(v));                       // 萬元
+const money = v => 'NT$' + nf.format(Math.round(v * 10000));       // 萬 → 元
+const pct   = (v, d = 1) => (v * 100).toFixed(d) + '%';
+// unit：'%' 用於期間對期間的變化率；'pp' 用於「與目標相差幾個百分點」，
+// 兩者意義不同，混用會讓人誤讀
+const sign  = (v, unit = '%') => (v >= 0 ? '▲ ' : '▼ ') + Math.abs(v * 100).toFixed(1) + unit;
+
+/* ---------------- 數字滾動 ---------------- */
+function countUp(el, to, fmt, ms = 850){
+  const from = Number(el.dataset.v || 0);
+  el.dataset.v = to;
+  if (reduce || from === to){ el.textContent = fmt(to); return; }
+  const t0 = performance.now();
+  (function step(t){
+    const p = Math.min(1, (t - t0) / ms);
+    const e = 1 - Math.pow(1 - p, 3);                              // easeOutCubic
+    el.textContent = fmt(from + (to - from) * e);
+    if (p < 1) requestAnimationFrame(step);
+  })(t0);
+}
+
+/* ---------------- 火花線（手刻 SVG，不值得為它載一整套圖表庫） ---------------- */
+function sparkline(vals, color){
+  const W = 260, H = 30, pad = 2;
+  const min = Math.min(...vals), max = Math.max(...vals), span = max - min || 1;
+  const pts = vals.map((v, i) => {
+    const x = pad + i * (W - pad * 2) / (vals.length - 1);
+    const y = H - pad - (v - min) / span * (H - pad * 2);
+    return [x, y];
+  });
+  const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const area = line + ` L${W - pad} ${H} L${pad} ${H} Z`;
+  const id = 'g' + Math.random().toString(36).slice(2, 8);
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${color}" stop-opacity=".26"/>
+      <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="${area}" fill="url(#${id})"/>
+    <path d="${line}" fill="none" stroke="${color}" stroke-width="1.6"
+          stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${pts[pts.length - 1][0].toFixed(1)}" cy="${pts[pts.length - 1][1].toFixed(1)}"
+            r="2.4" fill="${color}"/>
+  </svg>`;
+}
+
+/* ---------------- KPI ---------------- */
+function renderKpis(){
+  const sum = k => months.reduce((a, m) => a + m[k], 0);
+  const rev = sum('revenue'), cost = sum('cost'), opex = sum('opex');
+  const pretax = sum('profit');
+  // 與下方損益結構瀑布圖用同一套算法，兩張圖的「稅後淨利」必須一致
+  const profit = pretax - Math.round(Math.max(0, pretax) * TAX_RATE);
+  const margin = rev ? (rev - cost) / rev : 0;
+  const netRate = rev ? profit / rev : 0;
+
+  // 與「前一個同長度期間」比較
+  const prevSlice = ALL.slice(Math.max(0, ALL.length - period * 2), ALL.length - period);
+  const prevRev = prevSlice.reduce((a, m) => a + m.revenue, 0) || rev;
+  const revDelta = (rev - prevRev) / prevRev;
+
+  const lastCash = months[months.length - 1].close;
+  const firstCash = months[0].open;
+  const cashDelta = (lastCash - firstCash) / firstCash;
+
+  const cards = [
+    { k:'期間總營收', cur:'TWD', to:rev, fmt:v => wan(v),  unit:'萬',
+      delta:revDelta, note:'較前期 ' + wan(prevRev) + ' 萬',
+      spark:months.map(m => m.revenue), color:'#0b4a8f' },
+    { k:'毛利率', cur:'%', to:margin * 100, fmt:v => v.toFixed(1), unit:'%',
+      delta:margin - .45, deltaUnit:'pp', note:'較目標 45%',
+      spark:months.map(m => (m.revenue - m.cost) / m.revenue), color:'#22c55e' },
+    { k:'稅後淨利', cur:'TWD', to:profit, fmt:v => wan(v), unit:'萬',
+      delta:netRate - .18, deltaUnit:'pp', note:'淨利率 ' + pct(netRate) + '（稅率 20%）',
+      spark:months.map(m => m.profit * (1 - TAX_RATE)), color: profit >= 0 ? '#22c55e' : '#ef4444' },
+    { k:'期末現金部位', cur:'TWD', to:lastCash, fmt:v => wan(v), unit:'萬',
+      delta:cashDelta, note:'期初 ' + wan(firstCash) + ' 萬',
+      spark:months.map(m => m.close), color:'#0b4a8f' },
+  ];
+
+  const host = document.getElementById('kpis');
+  if (host.children.length !== cards.length){
+    host.innerHTML = cards.map(c => `
+      <div class="panel kpi">
+        <div class="k">${c.k} <span class="cur">${c.cur}</span></div>
+        <div class="v"><span class="n">0</span><span class="unit">${c.unit}</span></div>
+        <div class="d"><span class="delta"></span><span class="note"></span></div>
+        <div class="sp"></div>
+      </div>`).join('');
+  }
+  [...host.children].forEach((el, i) => {
+    const c = cards[i];
+    countUp(el.querySelector('.n'), c.to, c.fmt);
+    const dEl = el.querySelector('.delta');
+    dEl.className = 'delta ' + (c.delta >= 0 ? 'up' : 'down');
+    dEl.textContent = sign(c.delta, c.deltaUnit);
+    el.querySelector('.note').textContent = c.note;
+    el.querySelector('.sp').innerHTML = sparkline(c.spark, c.color);
+  });
+}
+
+/* ---------------- 圖表共用設定 ---------------- */
+const AXIS = {
+  axisLine:{ lineStyle:{ color:'#e3e7ed' } },
+  axisTick:{ show:false },
+  axisLabel:{ color:'#8a93a3', fontSize:10.5, fontFamily:'JetBrains Mono, monospace' },
+  splitLine:{ lineStyle:{ color:'#f0f3f7' } },
+};
+const TOOLTIP = {
+  backgroundColor:'#fff', borderColor:'#e3e7ed', borderWidth:1,
+  textStyle:{ color:'#16202e', fontSize:11.5 },
+  extraCssText:'box-shadow:0 6px 20px rgba(16,32,46,.12);border-radius:8px',
+};
+const UP = '#e0483c', DOWN = '#1aa06d';        // 台股慣例：紅漲綠跌
+
+const cK  = echarts.init(document.getElementById('chartK'));
+const cP  = echarts.init(document.getElementById('chartPie'));
+const cW  = echarts.init(document.getElementById('chartWf'));
+const cB  = echarts.init(document.getElementById('chartBudget'));
+
+function drawK(){
+  cK.setOption({
+    animation:!reduce,
+    grid:[{ left:52, right:16, top:16, height:'56%' },
+          { left:52, right:16, top:'74%', height:'17%' }],
+    tooltip:{ trigger:'axis', axisPointer:{ type:'cross' }, ...TOOLTIP,
+      formatter: ps => {
+        const k = ps.find(p => p.seriesName === '現金部位');
+        const r = ps.find(p => p.seriesName === '當月營收');
+        let s = '<b>' + ps[0].axisValue + '</b><br>';
+        if (k) s += `月初 ${wan(k.data[1])}　月底 ${wan(k.data[2])}<br>
+                     最低 ${wan(k.data[3])}　最高 ${wan(k.data[4])}<br>`;
+        if (r) s += `當月營收 <b>${wan(r.data)} 萬</b>`;
+        return s;
+      } },
+    axisPointer:{ link:[{ xAxisIndex:'all' }] },
+    xAxis:[
+      { type:'category', data:months.map(m => m.label), ...AXIS, boundaryGap:true },
+      { type:'category', gridIndex:1, data:months.map(m => m.label), ...AXIS,
+        axisLabel:{ show:false } },
+    ],
+    yAxis:[
+      { type:'value', scale:true, name:'萬元', nameTextStyle:{ color:'#8a93a3', fontSize:10 }, ...AXIS },
+      { type:'value', gridIndex:1, splitNumber:2, ...AXIS, axisLabel:{ ...AXIS.axisLabel, fontSize:9.5 } },
+    ],
+    series:[
+      { name:'現金部位', type:'candlestick',
+        data:months.map(m => [m.open, m.close, m.low, m.high]),
+        itemStyle:{ color:UP, color0:DOWN, borderColor:UP, borderColor0:DOWN, borderWidth:1.4 } },
+      { name:'當月營收', type:'bar', xAxisIndex:1, yAxisIndex:1,
+        data:months.map(m => m.revenue), barWidth:'55%',
+        itemStyle:{ color:'#c9d8e8', borderRadius:[2,2,0,0] } },
+    ],
+  }, true);
+}
+
+function drawPie(){
+  const mix = TYPES.map((t, i) => ({
+    name:t,
+    value:Math.round(months.reduce((a, m) => a + m.revenue * m.mix[i], 0) /
+                     months.reduce((a, m) => a + m.mix.reduce((x, y) => x + y, 0), 0) * months.length),
+  }));
+  cP.setOption({
+    animation:!reduce,
+    tooltip:{ trigger:'item', ...TOOLTIP,
+      formatter: p => `<b>${p.name}</b><br>${wan(p.value)} 萬（${p.percent}%）` },
+    legend:{ bottom:4, itemWidth:9, itemHeight:9, itemGap:14,
+      textStyle:{ color:'#4d5769', fontSize:11 } },
+    series:[{
+      type:'pie', radius:['52%','76%'], center:['50%','44%'], avoidLabelOverlap:true,
+      itemStyle:{ borderColor:'#fff', borderWidth:2, borderRadius:4 },
+      label:{ show:true, formatter:'{d}%', color:'#4d5769', fontSize:11,
+        fontFamily:'JetBrains Mono, monospace' },
+      labelLine:{ length:8, length2:8, lineStyle:{ color:'#c6cedb' } },
+      data:mix,
+      color:['#003366','#2b6cb0','#63a4d8','#a9cbe8'],
+    }],
+  }, true);
+}
+
+function drawWaterfall(){
+  const sum = k => months.reduce((a, m) => a + m[k], 0);
+  const rev = sum('revenue'), cost = sum('cost'), opex = sum('opex');
+  const pre = rev - cost - opex;
+  const tax = Math.round(Math.max(0, pre) * TAX_RATE);
+  const net = pre - tax;
+
+  // 瀑布圖在 ECharts 沒有原生型別，用一層透明的墊底 bar 疊出來
+  const steps = [
+    { n:'營業收入', v:rev,    t:'total' },
+    { n:'專案成本', v:-cost,  t:'neg' },
+    { n:'營運費用', v:-opex,  t:'neg' },
+    { n:'稅前淨利', v:pre,    t:'total' },
+    { n:'所得稅',   v:-tax,   t:'neg' },
+    { n:'稅後淨利', v:net,    t:'total' },
+  ];
+  const base = [], val = [];
+  let run = 0;
+  steps.forEach(s => {
+    if (s.t === 'total'){ base.push(0); val.push(s.v); run = s.v; }
+    else { const next = run + s.v; base.push(Math.min(run, next)); val.push(Math.abs(s.v)); run = next; }
+  });
+
+  cW.setOption({
+    animation:!reduce,
+    grid:{ left:56, right:16, top:18, bottom:34 },
+    tooltip:{ trigger:'axis', axisPointer:{ type:'shadow' }, ...TOOLTIP,
+      formatter: ps => {
+        const i = ps[0].dataIndex;
+        return `<b>${steps[i].n}</b><br>${steps[i].v >= 0 ? '' : '−'}${wan(Math.abs(steps[i].v))} 萬`;
+      } },
+    xAxis:{ type:'category', data:steps.map(s => s.n), ...AXIS,
+      axisLabel:{ ...AXIS.axisLabel, fontFamily:'Inter, Noto Sans TC, sans-serif',
+        fontSize:10.5, interval:0 } },
+    yAxis:{ type:'value', name:'萬元', nameTextStyle:{ color:'#8a93a3', fontSize:10 }, ...AXIS },
+    series:[
+      { type:'bar', stack:'w', silent:true, itemStyle:{ color:'transparent' }, data:base },
+      { type:'bar', stack:'w', barWidth:'52%', data:val.map((v, i) => ({
+          value:v,
+          itemStyle:{
+            color: steps[i].t === 'total' ? '#003366' : '#e0483c',
+            borderRadius: steps[i].t === 'neg' ? [0,0,3,3] : [3,3,0,0],
+          },
+        })),
+        label:{ show:true, position:'top', color:'#4d5769', fontSize:10.5,
+          fontFamily:'JetBrains Mono, monospace',
+          formatter: p => (steps[p.dataIndex].v < 0 ? '−' : '') + wan(Math.abs(steps[p.dataIndex].v)) } },
+    ],
+  }, true);
+}
+
+function drawBudget(){
+  cB.setOption({
+    animation:!reduce,
+    grid:{ left:52, right:52, top:22, bottom:26 },
+    tooltip:{ trigger:'axis', axisPointer:{ type:'shadow' }, ...TOOLTIP },
+    legend:{ top:0, right:6, itemWidth:10, itemHeight:9,
+      textStyle:{ color:'#4d5769', fontSize:10.5 } },
+    xAxis:{ type:'category', data:months.map(m => m.label), ...AXIS },
+    yAxis:[
+      { type:'value', name:'萬元', nameTextStyle:{ color:'#8a93a3', fontSize:10 }, ...AXIS },
+      { type:'value', name:'達成率', min:60, max:140, nameTextStyle:{ color:'#8a93a3', fontSize:10 },
+        ...AXIS, splitLine:{ show:false }, axisLabel:{ ...AXIS.axisLabel, formatter:'{value}%' } },
+    ],
+    series:[
+      { name:'實際營收', type:'bar', data:months.map(m => m.revenue), barWidth:'46%',
+        itemStyle:{ color:'#2b6cb0', borderRadius:[3,3,0,0] } },
+      { name:'預算', type:'bar', data:months.map(m => m.budget), barWidth:'46%',
+        itemStyle:{ color:'#dde5ee', borderRadius:[3,3,0,0] } },
+      { name:'達成率', type:'line', yAxisIndex:1, smooth:true, symbolSize:5,
+        data:months.map(m => +(m.revenue / m.budget * 100).toFixed(1)),
+        lineStyle:{ color:'#e0483c', width:1.8 }, itemStyle:{ color:'#e0483c' },
+        markLine:{ silent:true, symbol:'none', data:[{ yAxis:100 }],
+          lineStyle:{ color:'#8a93a3', type:'dashed', width:1 },
+          label:{ formatter:'目標 100%', color:'#8a93a3', fontSize:10 } } },
+    ],
+  }, true);
+}
+
+/* ---------------- 應收帳款帳齡 ---------------- */
+const AR_CLIENTS = [
+  ['潮汐音樂節', '主視覺與售票頁'], ['NOVA 運動', '電商改版第二期'],
+  ['明日方舟金融', '產品官網維運'], ['白鹿美術館', '互動展場延伸'],
+  ['霧谷咖啡', '包裝系統擴充'],     ['城市光譜', '資料視覺化年約'],
+  ['青禾科技', '品牌識別'],         ['海馬文創', '形象官網'],
+  ['和光生活', '動態識別'],         ['立揚建設', '年報設計'],
+];
+function renderAr(){
+  const arRnd = mulberry32(88113);
+  const rows = AR_CLIENTS.map(([c, p]) => {
+    const invoice = Math.round((28 + arRnd() * 180)) * 10000;
+    const paid = Math.round(invoice * (arRnd() < .3 ? 1 : arRnd() * .85) / 1000) * 1000;
+    const due = invoice - paid;
+    const age = due === 0 ? 0 : Math.floor(arRnd() * 120);
+    return { c, p, invoice, paid, due, age };
+  }).sort((a, b) => b.age - a.age);
+
+  const t = k => rows.reduce((a, r) => a + r[k], 0);
+  const overdue = rows.filter(r => r.age > 60);
+
+  document.getElementById('arSub').textContent =
+    '共 ' + rows.length + ' 筆 · 逾期 60 天以上 ' + overdue.length + ' 筆';
+
+  document.getElementById('arBody').innerHTML = rows.map(r => `
+    <tr class="${r.age > 60 ? 'warn' : ''}">
+      <td><b>${r.c}</b><br><span style="color:var(--ink-3);font-size:11px">${r.p}</span></td>
+      <td>${nf.format(r.invoice)}</td>
+      <td class="pos">${nf.format(r.paid)}</td>
+      <td class="${r.due > 0 ? 'neg' : ''}">${r.due ? nf.format(r.due) : '—'}</td>
+      <td><span class="aged">
+        <span class="bar"><i style="width:${Math.min(100, r.age / 120 * 100)}%"></i></span>
+        ${r.due ? r.age + ' 天' : '已結清'}
+      </span></td>
+    </tr>`).join('');
+
+  document.getElementById('arFoot').innerHTML = `
+    <tr>
+      <td>合計</td>
+      <td>${nf.format(t('invoice'))}</td>
+      <td class="pos">${nf.format(t('paid'))}</td>
+      <td class="neg">${nf.format(t('due'))}</td>
+      <td>回收率 ${pct(t('paid') / t('invoice'))}</td>
+    </tr>`;
+}
+
+/* ---------------- 期間切換 ---------------- */
+function setPeriod(p){
+  period = p;
+  months = ALL.slice(ALL.length - p);
+  document.querySelectorAll('.periods button').forEach(b =>
+    b.setAttribute('aria-pressed', String(Number(b.dataset.p) === p)));
+  document.getElementById('kSub').textContent =
+    months[0].label + ' – ' + months[months.length - 1].label + ' · 單位：新台幣萬元';
+
+  renderKpis();
+  drawK(); drawPie(); drawWaterfall(); drawBudget();
+}
+document.querySelectorAll('.periods button').forEach(b => {
+  b.onclick = () => setPeriod(Number(b.dataset.p));
+});
+
+addEventListener('resize', () => [cK, cP, cW, cB].forEach(c => c.resize()));
+
+/* ---------------- 啟動 ---------------- */
+document.getElementById('closeDate').textContent = '2026-07-31';
+renderAr();
+setPeriod(12);
+</script>
+</body>
+</html>

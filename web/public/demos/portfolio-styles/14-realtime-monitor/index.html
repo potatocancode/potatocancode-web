@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STUDIO 07 — 維運監控中心 / Real-Time Monitoring</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2212%22%20fill%3D%22%230b0e14%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2213%22%20fill%3D%22%2322C55E%22%2F%3E%3C%2Fsvg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<style>
+  /* ============================================================
+     Real-Time Monitoring
+     設計準則：色彩只用來編碼「健康狀態」。綠=正常、琥珀=警告、
+     紅=異常。任何會動的東西都必須代表「資料真的變了」。
+     ============================================================ */
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0b0e14; --panel:#121722; --panel-2:#171d2a; --line:#1f2735;
+    --fg:#e6e9ef; --dim:#7c8598; --dim-2:#525c70;
+    --ok:#22c55e; --warn:#f59e0b; --crit:#ef4444; --info:#38bdf8;
+    --gap:10px; --head-h:52px; --side-w:280px;
+    --pulse:2s;
+  }
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--fg); overflow:hidden;
+    font-family:'Inter','Noto Sans TC',system-ui,sans-serif; font-size:13px; line-height:1.5;
+    -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums;
+  }
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+
+  /* ---------- 頂列 ---------- */
+  .topbar{
+    height:var(--head-h); border-bottom:1px solid var(--line); background:var(--panel);
+    display:flex; align-items:center; gap:16px; padding:0 16px; position:relative; z-index:20;
+  }
+  .brand{display:flex; align-items:center; gap:9px; font-weight:700; letter-spacing:-.01em; white-space:nowrap}
+  .brand .mark{width:24px; height:24px; border-radius:6px; background:var(--ok); color:#06210f;
+    display:grid; place-items:center; font-size:11px; font-weight:700}
+  .brand small{color:var(--dim); font-weight:500}
+
+  /* 連線狀態：脈動的點 + 文字 */
+  .conn{
+    display:flex; align-items:center; gap:8px; padding:5px 11px; border-radius:999px;
+    border:1px solid rgba(34,197,94,.3); background:rgba(34,197,94,.08);
+    font-size:11.5px; font-weight:600; letter-spacing:.06em; color:var(--ok);
+  }
+  .conn.off{border-color:rgba(148,163,184,.3); background:rgba(148,163,184,.08); color:#94a3b8}
+  .dot{width:7px; height:7px; border-radius:50%; background:currentColor; position:relative; flex:none}
+  .conn:not(.off) .dot::after{
+    content:''; position:absolute; inset:-3px; border-radius:50%; border:1.5px solid currentColor;
+    animation:ping var(--pulse) cubic-bezier(0,0,.2,1) infinite;
+  }
+  @keyframes ping{0%{transform:scale(.7);opacity:1} 80%,100%{transform:scale(2.3);opacity:0}}
+
+  .clock{margin-left:auto; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--dim); white-space:nowrap}
+  .tbtn{
+    height:30px; padding:0 11px; border:1px solid var(--line); border-radius:7px; background:var(--panel-2);
+    font:inherit; font-size:12px; font-weight:500; color:var(--dim); cursor:pointer;
+    display:inline-flex; align-items:center; gap:6px; white-space:nowrap; transition:.15s;
+  }
+  .tbtn:hover{border-color:#2c3648; color:var(--fg)}
+  .tbtn.on{border-color:rgba(34,197,94,.4); background:rgba(34,197,94,.1); color:var(--ok)}
+  .tbtn:focus-visible{outline:2px solid var(--info); outline-offset:1px}
+
+  /* ---------- 版面 ---------- */
+  .shell{display:flex; height:calc(100vh - var(--head-h)); height:calc(100dvh - var(--head-h))}
+
+  /* ---------- 服務清單側欄 ---------- */
+  .side{
+    width:var(--side-w); flex:none; background:var(--panel); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .sidehead{
+    padding:12px 14px 10px; border-bottom:1px solid var(--line);
+    display:flex; align-items:baseline; justify-content:space-between;
+  }
+  .sidehead h2{font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--dim)}
+  .sidehead span{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--dim-2)}
+  .svclist{flex:1; overflow-y:auto; padding:6px}
+  .svclist::-webkit-scrollbar,.log::-webkit-scrollbar{width:8px}
+  .svclist::-webkit-scrollbar-thumb,.log::-webkit-scrollbar-thumb{background:#28303f; border-radius:5px}
+
+  .svc{
+    display:grid; grid-template-columns:auto 1fr auto; gap:9px; align-items:center;
+    padding:9px 10px; border-radius:8px; cursor:pointer; border:1px solid transparent;
+    transition:background .15s,border-color .15s;
+  }
+  .svc:hover{background:var(--panel-2)}
+  .svc.sel{background:var(--panel-2); border-color:#2c3648}
+  .svc .sdot{width:8px; height:8px; border-radius:50%; flex:none; position:relative}
+  .svc.s-ok .sdot{background:var(--ok)}
+  .svc.s-warn .sdot{background:var(--warn)}
+  .svc.s-crit .sdot{background:var(--crit)}
+  .svc.s-crit .sdot::after{
+    content:''; position:absolute; inset:-3px; border-radius:50%; border:1.5px solid var(--crit);
+    animation:ping 1.1s cubic-bezier(0,0,.2,1) infinite;
+  }
+  .svc .nm{min-width:0}
+  .svc .nm b{display:block; font-size:12.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .svc .nm i{font-style:normal; font-size:10.5px; color:var(--dim-2); font-family:'JetBrains Mono',monospace}
+  .svc .rt{font-family:'JetBrains Mono',monospace; font-size:11.5px; text-align:right; flex:none}
+  .svc .rt b{display:block; font-weight:600}
+  .svc .rt i{font-style:normal; font-size:9.5px; color:var(--dim-2)}
+  .svc.s-ok .rt b{color:var(--ok)} .svc.s-warn .rt b{color:var(--warn)} .svc.s-crit .rt b{color:var(--crit)}
+
+  /* ---------- 主區 ---------- */
+  .main{flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--gap); padding:var(--gap); overflow:hidden}
+  .panel{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px; min-width:0;
+  }
+  .ptitle{
+    padding:11px 14px 0; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    font-size:12px; font-weight:600; color:var(--fg);
+  }
+  .ptitle .sub{font-weight:400; font-size:10.5px; color:var(--dim-2); font-family:'JetBrains Mono',monospace}
+
+  /* KPI */
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:var(--gap); flex:none}
+  .kpi{padding:12px 14px; position:relative; overflow:hidden}
+  .kpi::before{content:''; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--k,var(--ok))}
+  .kpi .k{font-size:10.5px; color:var(--dim); letter-spacing:.04em}
+  .kpi .v{font-size:27px; font-weight:700; letter-spacing:-.03em; font-family:'JetBrains Mono',monospace;
+    line-height:1.15; margin-top:2px; color:var(--k,var(--fg))}
+  .kpi .v small{font-size:12px; font-weight:500; color:var(--dim); margin-left:3px}
+  .kpi .d{font-size:10.5px; color:var(--dim-2); margin-top:2px}
+
+  /* 圖表列 */
+  .row2{display:grid; grid-template-columns:1.55fr 1fr; gap:var(--gap); flex:1; min-height:0}
+  .chart{width:100%; height:100%; min-height:0}
+  .chartbox{padding:0 8px 8px; flex:1; min-height:0}
+  .panel.flexcol{display:flex; flex-direction:column; overflow:hidden}
+
+  /* 事件記錄 */
+  .log{flex:1; overflow-y:auto; padding:4px 8px 8px; display:flex; flex-direction:column; gap:2px}
+  .ev{
+    display:grid; grid-template-columns:auto auto 1fr; gap:8px; align-items:baseline;
+    padding:6px 8px; border-radius:6px; font-size:11.5px; line-height:1.45;
+    animation:slideIn .32s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes slideIn{from{opacity:0; transform:translateY(-7px)} to{opacity:1; transform:none}}
+  .ev:nth-child(odd){background:rgba(255,255,255,.014)}
+  .ev time{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--dim-2); white-space:nowrap}
+  .ev .lv{
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700; letter-spacing:.06em;
+    padding:2px 5px; border-radius:4px; white-space:nowrap;
+  }
+  .lv-info{background:rgba(56,189,248,.13); color:var(--info)}
+  .lv-ok{background:rgba(34,197,94,.13); color:var(--ok)}
+  .lv-warn{background:rgba(245,158,11,.13); color:var(--warn)}
+  .lv-crit{background:rgba(239,68,68,.15); color:var(--crit)}
+  .ev .msg{color:var(--dim); min-width:0}
+  .ev .msg b{color:var(--fg); font-weight:500}
+
+  /* ---------- 告警 toast ---------- */
+  .toasts{
+    position:fixed; right:14px; bottom:14px; z-index:1000;
+    display:flex; flex-direction:column-reverse; gap:8px; width:min(330px,calc(100vw - 28px));
+    pointer-events:none;
+  }
+  .toast{
+    background:var(--panel-2); border:1px solid var(--line); border-left:3px solid var(--crit);
+    border-radius:9px; padding:11px 13px; box-shadow:0 10px 30px rgba(0,0,0,.5);
+    animation:toastIn .3s cubic-bezier(.2,.8,.2,1); pointer-events:auto;
+  }
+  .toast.leaving{animation:toastOut .25s forwards}
+  @keyframes toastIn{from{opacity:0; transform:translateX(24px)} to{opacity:1; transform:none}}
+  @keyframes toastOut{to{opacity:0; transform:translateX(24px)}}
+  .toast.warn{border-left-color:var(--warn)}
+  .toast.ok{border-left-color:var(--ok)}
+  .toast .th{display:flex; align-items:center; gap:7px; font-size:12px; font-weight:600; margin-bottom:3px}
+  .toast .th .lv{font-family:'JetBrains Mono',monospace; font-size:9.5px; padding:2px 5px; border-radius:4px}
+  .toast .tb{font-size:11.5px; color:var(--dim); line-height:1.5}
+  .toast .tb b{color:var(--fg); font-weight:500}
+  .toast .tx{
+    position:absolute; top:7px; right:8px; border:0; background:none; color:var(--dim-2);
+    cursor:pointer; font-size:13px; line-height:1; padding:3px;
+  }
+  .toast{position:relative}
+  .toast .tx:hover{color:var(--fg)}
+
+  /* ---------- 返回總覽 ---------- */
+  .back{
+    position:fixed; left:12px; bottom:12px; z-index:1001; text-decoration:none;
+    background:var(--panel-2); border:1px solid var(--line); color:var(--fg);
+    font-size:11.5px; font-weight:500; padding:7px 12px; border-radius:7px; transition:.18s;
+  }
+  .back:hover{border-color:var(--ok); color:var(--ok)}
+  .back:focus-visible{outline:2px solid var(--ok); outline-offset:2px}
+
+  /* ---------- 響應式 ---------- */
+  @media (max-width:1100px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .row2{grid-template-columns:1fr; grid-auto-rows:minmax(220px,1fr)}
+    .main{overflow-y:auto}
+  }
+  @media (max-width:820px){
+    .side{display:none}
+    .clock{display:none}
+  }
+  /* 頂列在窄螢幕擠不下：收掉次要按鈕與副標。
+     不用 flex-wrap —— .shell 高度是用 --head-h 算的，頂列換行會破版。 */
+  @media (max-width:600px){
+    .topbar{gap:8px; padding:0 10px}
+    .brand{font-size:12.5px}
+    .brand small{display:none}
+    #clearBtn{display:none}
+    #liveBtn{margin-left:auto}
+    .conn{padding:5px 9px; letter-spacing:.03em}
+  }
+
+  /* 尊重使用者的動態偏好：停掉脈動與進場動畫，資料改為靜態快照 */
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important; transition-duration:.01ms!important}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="mark">07</span>STUDIO 07 <small>維運監控中心</small></div>
+  <div class="conn" id="conn"><span class="dot"></span><span id="connText">LIVE</span></div>
+  <div class="clock" id="clock">--:--:--</div>
+  <button class="tbtn on" id="liveBtn" aria-pressed="true">⏸ 暫停推送</button>
+  <button class="tbtn" id="clearBtn">清空記錄</button>
+</header>
+
+<div class="shell">
+  <!-- ============ 服務清單 ============ -->
+  <aside class="side">
+    <div class="sidehead">
+      <h2>受監控服務</h2>
+      <span id="svcSummary">—</span>
+    </div>
+    <div class="svclist" id="svclist"></div>
+  </aside>
+
+  <!-- ============ 主區 ============ -->
+  <main class="main">
+    <section class="kpis" id="kpis"></section>
+
+    <div class="row2">
+      <div class="panel flexcol">
+        <div class="ptitle">
+          回應時間 <span class="sub" id="chartSub">全部服務（前 5 項）· 近 60 秒 · 單位 ms</span>
+        </div>
+        <div class="chartbox"><div class="chart" id="chartRt"></div></div>
+      </div>
+
+      <div class="panel flexcol">
+        <div class="ptitle">事件記錄 <span class="sub" id="logCount">0 筆</span></div>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+
+    <div class="panel flexcol" style="flex:0 0 168px">
+      <div class="ptitle">請求量與錯誤 <span class="sub">每秒請求數（堆疊）· 錯誤率（折線）</span></div>
+      <div class="chartbox"><div class="chart" id="chartReq"></div></div>
+    </div>
+  </main>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite" aria-label="告警通知"></div>
+<a class="back" href="../index.html">← 返回總覽</a>
+
+<script>
+'use strict';
+/* ================================================================
+   Real-Time Monitoring
+   沒有真的後端，用一個模擬器扮演 WebSocket：每秒推一批 tick，
+   偶爾注入一次事故（劣化 → 異常 → 恢復），讓告警流程走完整。
+   ================================================================ */
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- 種子亂數 ---------------- */
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rnd = mulberry32(70714);
+
+/* ---------------- 受監控的服務（都是 STUDIO 07 交付的案子） ---------------- */
+const SERVICES = [
+  { id:'wugu',   name:'霧谷咖啡 官網',      host:'wugu.coffee',        base: 92, rps: 14 },
+  { id:'tide',   name:'潮汐音樂節 售票',    host:'tide-fest.tw',       base:148, rps: 62 },
+  { id:'ark',    name:'明日方舟金融 官網',  host:'ark-fin.com.tw',     base:118, rps: 31 },
+  { id:'deer',   name:'白鹿美術館 導覽',    host:'bailu-museum.org',   base:134, rps:  9 },
+  { id:'nova',   name:'NOVA 運動 電商',     host:'shop.nova.tw',       base:176, rps: 88 },
+  { id:'spec',   name:'城市光譜 資料站',    host:'cityspectrum.tw',    base:205, rps:  6 },
+  { id:'s07',    name:'STUDIO 07 官網',     host:'studio07.tw',        base: 74, rps: 11 },
+  { id:'cms',    name:'內部 CMS',           host:'cms.studio07.tw',    base: 96, rps:  4 },
+  { id:'cdn',    name:'圖片 CDN',           host:'img.studio07.tw',    base: 38, rps:127 },
+  { id:'form',   name:'表單 API',           host:'api.studio07.tw',    base: 63, rps: 22 },
+];
+
+const WINDOW = 60;                          // 圖表保留 60 個資料點
+const now = Date.now();
+
+/* 每個服務的執行期狀態 */
+const state = SERVICES.map(s => ({
+  ...s,
+  status: 'ok',
+  rt: s.base,
+  history: Array.from({ length: WINDOW }, () => s.base + (rnd() - .5) * s.base * .18),
+  reqHistory: Array.from({ length: WINDOW }, () => s.rps * (.85 + rnd() * .3)),
+  errHistory: Array.from({ length: WINDOW }, () => rnd() * .4),
+  incident: null,                            // { phase, left }
+  uptime: 99.2 + rnd() * .79,
+}));
+let times = Array.from({ length: WINDOW }, (_, i) =>
+  new Date(now - (WINDOW - 1 - i) * 1000).toLocaleTimeString('zh-TW', { hour12:false }));
+
+let selected = null;                         // null = 全部
+let live = true;
+let logs = [];
+
+/* ---------------- 圖表 ---------------- */
+const AXIS = {
+  axisLine:{ lineStyle:{ color:'#1f2735' } },
+  axisTick:{ show:false },
+  axisLabel:{ color:'#525c70', fontSize:10, fontFamily:'JetBrains Mono, monospace' },
+  splitLine:{ lineStyle:{ color:'#161c28' } },
+};
+const TOOLTIP = {
+  backgroundColor:'#171d2a', borderColor:'#2c3648', borderWidth:1,
+  textStyle:{ color:'#e6e9ef', fontSize:11 },
+  axisPointer:{ lineStyle:{ color:'#2c3648' } },
+};
+
+const chartRt  = echarts.init(document.getElementById('chartRt'),  null, { renderer:'canvas' });
+const chartReq = echarts.init(document.getElementById('chartReq'), null, { renderer:'canvas' });
+
+const PALETTE = ['#38bdf8','#22c55e','#f59e0b','#a78bfa','#f472b6','#2dd4bf','#fb923c','#60a5fa','#4ade80','#facc15'];
+
+function rtOption(){
+  const shown = selected ? state.filter(s => s.id === selected) : state.slice(0, 5);
+  return {
+    animation: !reduce,
+    animationDuration: 260,
+    grid:{ left:44, right:14, top:14, bottom:22 },
+    tooltip:{ trigger:'axis', ...TOOLTIP },
+    legend:{
+      show:!selected, top:0, right:8, itemWidth:9, itemHeight:9, itemGap:11,
+      textStyle:{ color:'#7c8598', fontSize:10 },
+    },
+    xAxis:{ type:'category', data:times, boundaryGap:false, ...AXIS,
+      axisLabel:{ ...AXIS.axisLabel, interval: Math.floor(WINDOW / 5) } },
+    yAxis:{ type:'value', name:'ms', nameTextStyle:{ color:'#525c70', fontSize:10 }, ...AXIS },
+    series: shown.map((s, i) => ({
+      name:s.name, type:'line', data:s.history.map(v => Math.round(v)),
+      smooth:true, symbol:'none', lineStyle:{ width:1.6, color:PALETTE[i % PALETTE.length] },
+      areaStyle: selected ? {
+        color:{ type:'linear', x:0, y:0, x2:0, y2:1, colorStops:[
+          { offset:0, color:'rgba(56,189,248,.28)' }, { offset:1, color:'rgba(56,189,248,0)' }]},
+      } : undefined,
+    })),
+  };
+}
+
+function reqOption(){
+  const shown = selected ? state.filter(s => s.id === selected) : state;
+  const totalErr = times.map((_, i) => {
+    const sum = shown.reduce((a, s) => a + s.errHistory[i], 0);
+    return +(sum / shown.length).toFixed(2);
+  });
+  return {
+    animation: !reduce,
+    animationDuration: 260,
+    grid:{ left:44, right:44, top:12, bottom:20 },
+    tooltip:{ trigger:'axis', ...TOOLTIP },
+    xAxis:{ type:'category', data:times, boundaryGap:false, ...AXIS,
+      axisLabel:{ ...AXIS.axisLabel, interval: Math.floor(WINDOW / 5) } },
+    yAxis:[
+      { type:'value', name:'req/s', nameTextStyle:{ color:'#525c70', fontSize:10 }, ...AXIS },
+      { type:'value', name:'錯誤 %', nameTextStyle:{ color:'#525c70', fontSize:10 },
+        ...AXIS, splitLine:{ show:false }, max: 8 },
+    ],
+    series:[
+      ...shown.map((s, i) => ({
+        name:s.name, type:'line', stack:'req', data:s.reqHistory.map(v => Math.round(v)),
+        smooth:true, symbol:'none', lineStyle:{ width:0 },
+        areaStyle:{ opacity:.5, color:PALETTE[i % PALETTE.length] },
+      })),
+      { name:'錯誤率', type:'line', yAxisIndex:1, data:totalErr, smooth:true, symbol:'none',
+        lineStyle:{ width:1.8, color:'#ef4444' } },
+    ],
+  };
+}
+
+function drawCharts(){
+  chartRt.setOption(rtOption());
+  chartReq.setOption(reqOption());
+}
+drawCharts();
+addEventListener('resize', () => { chartRt.resize(); chartReq.resize(); });
+
+/* ---------------- 事件記錄 ---------------- */
+function log(level, msg){
+  logs.unshift({ t:new Date(), level, msg });
+  if (logs.length > 120) logs.length = 120;
+  renderLog();
+}
+const LV = { info:'INFO', ok:'OK', warn:'WARN', crit:'CRIT' };
+function renderLog(){
+  document.getElementById('logCount').textContent = logs.length + ' 筆';
+  document.getElementById('log').innerHTML = logs.slice(0, 60).map(l => `
+    <div class="ev">
+      <time>${l.t.toLocaleTimeString('zh-TW', { hour12:false })}</time>
+      <span class="lv lv-${l.level}">${LV[l.level]}</span>
+      <span class="msg">${l.msg}</span>
+    </div>`).join('');
+}
+
+/* ---------------- 告警 toast ---------------- */
+function toast(kind, title, body){
+  const host = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast ' + (kind === 'crit' ? '' : kind);
+  el.innerHTML = `
+    <button class="tx" aria-label="關閉通知">✕</button>
+    <div class="th"><span class="lv lv-${kind}">${LV[kind]}</span>${title}</div>
+    <div class="tb">${body}</div>`;
+  const kill = () => {
+    el.classList.add('leaving');
+    setTimeout(() => el.remove(), 260);
+  };
+  el.querySelector('.tx').onclick = kill;
+  host.appendChild(el);
+  setTimeout(kill, 6000);
+  while (host.children.length > 4) host.firstElementChild.remove();
+}
+
+/* ---------------- 模擬推送 ---------------- */
+function tick(){
+  const t = new Date();
+  times.push(t.toLocaleTimeString('zh-TW', { hour12:false }));
+  times.shift();
+
+  state.forEach(s => {
+    // 事故生命週期：劣化 3 秒 → 異常 5 秒 → 恢復
+    if (s.incident){
+      s.incident.left--;
+      if (s.incident.left <= 0){
+        if (s.incident.phase === 'warn'){
+          s.incident = { phase:'crit', left:5 };
+          s.status = 'crit';
+          log('crit', `<b>${s.name}</b> 健康檢查連續失敗，判定為異常（${s.host}）`);
+          toast('crit', s.name, `連續 3 次健康檢查逾時，已標記為<b>異常</b>。<br>來源：${s.host}`);
+        } else {
+          s.incident = null;
+          s.status = 'ok';
+          log('ok', `<b>${s.name}</b> 已恢復正常，回應時間回到基準值`);
+          toast('ok', s.name, '服務已<b>恢復正常</b>，回應時間回到基準值。');
+        }
+      }
+    } else if (rnd() < 0.012){
+      // 隨機觸發一次新事故
+      s.incident = { phase:'warn', left:3 };
+      s.status = 'warn';
+      log('warn', `<b>${s.name}</b> 回應時間高於基準 2.5 倍，開始觀察`);
+      toast('warn', s.name, '回應時間顯著劣化，已進入<b>觀察</b>狀態。');
+    }
+
+    // 依狀態決定這一 tick 的數值
+    const mult = s.status === 'crit' ? 6.5 + rnd() * 3
+               : s.status === 'warn' ? 2.5 + rnd() * 1.2
+               : 1 + (rnd() - .5) * .22;
+    s.rt = Math.max(12, s.base * mult);
+    s.history.push(s.rt); s.history.shift();
+
+    const reqMult = s.status === 'crit' ? .35 : s.status === 'warn' ? .8 : .85 + rnd() * .3;
+    s.reqHistory.push(s.rps * reqMult); s.reqHistory.shift();
+
+    const err = s.status === 'crit' ? 22 + rnd() * 16
+              : s.status === 'warn' ? 3 + rnd() * 4
+              : rnd() * .5;
+    s.errHistory.push(err); s.errHistory.shift();
+
+    // 正常時 uptime 緩慢回升，異常時扣分
+    s.uptime = Math.min(99.99, Math.max(95,
+      s.uptime + (s.status === 'crit' ? -0.05 : s.status === 'warn' ? -0.01 : 0.002)));
+  });
+
+  renderServices();
+  renderKpis();
+  drawCharts();
+}
+
+/* ---------------- 服務清單 ---------------- */
+function renderServices(){
+  const bad = state.filter(s => s.status !== 'ok').length;
+  document.getElementById('svcSummary').textContent =
+    (state.length - bad) + '/' + state.length + ' 正常';
+
+  document.getElementById('svclist').innerHTML = state.map(s => `
+    <div class="svc s-${s.status}${selected === s.id ? ' sel' : ''}" data-id="${s.id}"
+         role="button" tabindex="0" aria-pressed="${selected === s.id}">
+      <span class="sdot"></span>
+      <span class="nm"><b>${s.name}</b><i>${s.host}</i></span>
+      <span class="rt"><b>${Math.round(s.rt)}ms</b><i>${s.uptime.toFixed(2)}%</i></span>
+    </div>`).join('');
+}
+
+document.getElementById('svclist').addEventListener('click', e => {
+  const el = e.target.closest('.svc');
+  if (!el) return;
+  selected = selected === el.dataset.id ? null : el.dataset.id;
+  document.getElementById('chartSub').textContent =
+    (selected ? state.find(s => s.id === selected).name : '全部服務（前 5 項）') + ' · 近 60 秒 · 單位 ms';
+  renderServices();
+  drawCharts();
+});
+document.getElementById('svclist').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); e.target.closest('.svc')?.click(); }
+});
+
+/* ---------------- KPI ---------------- */
+function renderKpis(){
+  const ok = state.filter(s => s.status === 'ok').length;
+  const avgRt = state.reduce((a, s) => a + s.rt, 0) / state.length;
+  const totalReq = state.reduce((a, s) => a + s.reqHistory[WINDOW - 1], 0);
+  const errRate = state.reduce((a, s) => a + s.errHistory[WINDOW - 1], 0) / state.length;
+
+  const cards = [
+    { k:'服務健康度', v:ok + '<small>/' + state.length + '</small>',
+      d:ok === state.length ? '全部服務正常' : (state.length - ok) + ' 項需要注意',
+      c:ok === state.length ? 'var(--ok)' : 'var(--warn)' },
+    { k:'平均回應時間', v:Math.round(avgRt) + '<small>ms</small>',
+      d:avgRt < 150 ? '低於門檻 150ms' : '高於門檻 150ms',
+      c:avgRt < 150 ? 'var(--ok)' : 'var(--warn)' },
+    { k:'每秒請求數', v:Math.round(totalReq) + '<small>req/s</small>',
+      d:'尖峰 ' + Math.round(totalReq * 1.4) + ' req/s', c:'var(--info)' },
+    { k:'錯誤率', v:errRate.toFixed(2) + '<small>%</small>',
+      d:errRate < 1 ? 'SLO 目標 < 1%' : '已超出 SLO 目標',
+      c:errRate < 1 ? 'var(--ok)' : 'var(--crit)' },
+  ];
+
+  document.getElementById('kpis').innerHTML = cards.map(c => `
+    <div class="panel kpi" style="--k:${c.c}">
+      <div class="k">${c.k}</div>
+      <div class="v">${c.v}</div>
+      <div class="d">${c.d}</div>
+    </div>`).join('');
+}
+
+/* ---------------- 控制項 ---------------- */
+let timer = null;
+function setLive(on){
+  live = on;
+  const btn  = document.getElementById('liveBtn');
+  const conn = document.getElementById('conn');
+  btn.textContent = on ? '⏸ 暫停推送' : '▶ 恢復推送';
+  btn.classList.toggle('on', on);
+  btn.setAttribute('aria-pressed', String(on));
+  conn.classList.toggle('off', !on);
+  document.getElementById('connText').textContent = on ? 'LIVE' : 'PAUSED';
+
+  clearInterval(timer);
+  if (on) timer = setInterval(tick, 1000);
+  log(on ? 'info' : 'warn', on ? '已恢復資料推送（1 秒／次）' : '資料推送已由使用者暫停');
+}
+document.getElementById('liveBtn').onclick = () => setLive(!live);
+document.getElementById('clearBtn').onclick = () => { logs = []; renderLog(); };
+
+function tickClock(){
+  document.getElementById('clock').textContent =
+    new Date().toLocaleString('zh-TW', { hour12:false, month:'2-digit', day:'2-digit',
+      hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+
+/* ---------------- 啟動 ---------------- */
+renderServices();
+renderKpis();
+log('info', '監控中心已連線，開始接收 <b>10</b> 項服務的健康檢查');
+log('info', '取樣間隔 1 秒，圖表保留最近 60 個資料點');
+tickClock();
+
+if (reduce){
+  // 偏好減少動態：只顯示一份靜態快照，不做即時推送
+  document.getElementById('connText').textContent = 'STATIC';
+  document.getElementById('conn').classList.add('off');
+  document.getElementById('liveBtn').disabled = true;
+  document.getElementById('liveBtn').textContent = '已停用推送';
+  log('info', '偵測到「偏好減少動態」，已改為靜態快照模式');
+} else {
+  setInterval(tickClock, 1000);
+  timer = setInterval(tick, 1000);
+}
+</script>
+</body>
+</html>
