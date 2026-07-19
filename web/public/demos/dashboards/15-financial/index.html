@@ -375,10 +375,12 @@ function renderKpis(){
   const margin = rev ? (rev - cost) / rev : 0;
   const netRate = rev ? profit / rev : 0;
 
-  // 與「前一個同長度期間」比較
+  // 與「前一個同長度期間」比較。資料只有 24 個月，選 24 個月時前期不存在——
+  // 這時要老實說「無前期可比」，不能拿當期數字充當前期（會變成 ▲0.0% 的假比較）
   const prevSlice = ALL.slice(Math.max(0, ALL.length - period * 2), ALL.length - period);
-  const prevRev = prevSlice.reduce((a, m) => a + m.revenue, 0) || rev;
-  const revDelta = (rev - prevRev) / prevRev;
+  const hasPrev = prevSlice.length === period;
+  const prevRev = prevSlice.reduce((a, m) => a + m.revenue, 0);
+  const revDelta = hasPrev ? (rev - prevRev) / prevRev : null;
 
   const lastCash = months[months.length - 1].close;
   const firstCash = months[0].open;
@@ -386,7 +388,7 @@ function renderKpis(){
 
   const cards = [
     { k:'期間總營收', cur:'TWD', to:rev, fmt:v => wan(v),  unit:'萬',
-      delta:revDelta, note:'較前期 ' + wan(prevRev) + ' 萬',
+      delta:revDelta, note:hasPrev ? '較前期 ' + wan(prevRev) + ' 萬' : '資料起點，無前期可比',
       spark:months.map(m => m.revenue), color:'#0b4a8f' },
     { k:'毛利率', cur:'%', to:margin * 100, fmt:v => v.toFixed(1), unit:'%',
       delta:margin - .45, deltaUnit:'pp', note:'較目標 45%',
@@ -413,8 +415,14 @@ function renderKpis(){
     const c = cards[i];
     countUp(el.querySelector('.n'), c.to, c.fmt);
     const dEl = el.querySelector('.delta');
-    dEl.className = 'delta ' + (c.delta >= 0 ? 'up' : 'down');
-    dEl.textContent = sign(c.delta, c.deltaUnit);
+    if (c.delta === null){                       // 沒有可比基準就不顯示增減率
+      dEl.className = 'delta';
+      dEl.style.display = 'none';
+    } else {
+      dEl.style.display = '';
+      dEl.className = 'delta ' + (c.delta >= 0 ? 'up' : 'down');
+      dEl.textContent = sign(c.delta, c.deltaUnit);
+    }
     el.querySelector('.note').textContent = c.note;
     el.querySelector('.sp').innerHTML = sparkline(c.spark, c.color);
   });

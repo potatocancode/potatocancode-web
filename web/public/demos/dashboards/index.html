@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STUDIO 07 — 營運儀表板總覽</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2212%22%20fill%3D%22%230d1420%22%2F%3E%3Crect%20x%3D%2214%22%20y%3D%2234%22%20width%3D%228%22%20height%3D%2216%22%20rx%3D%222%22%20fill%3D%22%232563EB%22%2F%3E%3Crect%20x%3D%2228%22%20y%3D%2224%22%20width%3D%228%22%20height%3D%2226%22%20rx%3D%222%22%20fill%3D%22%2322C55E%22%2F%3E%3Crect%20x%3D%2242%22%20y%3D%2216%22%20width%3D%228%22%20height%3D%2234%22%20rx%3D%222%22%20fill%3D%22%23F59E0B%22%2F%3E%3C%2Fsvg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     營運儀表板總覽
+     視覺刻意與形象網站總覽（深黑＋橘紅）區隔：改用深藍鋼灰＋
+     資料色（藍/綠/琥珀/紅），一眼就知道這是「工具」不是「作品」。
+     ============================================================ */
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0f18; --fg:#e8ecf2; --dim:#7d879b; --dim-2:#4f5a70;
+    --line:#1c2534; --card:#111827; --card-2:#161f2e;
+    --accent:#3b82f6; --ok:#22c55e; --warn:#f59e0b; --crit:#ef4444;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--fg); min-height:100vh;
+    font-family:'Inter','Noto Sans TC',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  /* 背景：資料方格 + 冷色暈染 */
+  .grid-bg{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:52px 52px; opacity:.55;
+    mask-image:radial-gradient(circle at 50% 0%,#000 0%,transparent 72%);
+  }
+  .glow{
+    position:fixed; width:640px; height:640px; border-radius:50%; z-index:0; pointer-events:none;
+    background:radial-gradient(circle,rgba(59,130,246,.14),transparent 66%);
+    transform:translate(-50%,-50%);
+  }
+  .wrap{position:relative; z-index:1; max-width:1320px; margin:0 auto; padding:0 clamp(20px,5vw,56px)}
+
+  header{padding:clamp(72px,12vh,140px) 0 clamp(44px,7vh,76px)}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.26em;
+    text-transform:uppercase; color:var(--accent); margin-bottom:22px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow .live{
+    width:7px; height:7px; border-radius:50%; background:var(--ok); position:relative;
+  }
+  .eyebrow .live::after{
+    content:''; position:absolute; inset:-3px; border-radius:50%; border:1.5px solid var(--ok);
+    animation:ping 2s cubic-bezier(0,0,.2,1) infinite;
+  }
+  @keyframes ping{0%{transform:scale(.7);opacity:1} 80%,100%{transform:scale(2.4);opacity:0}}
+
+  h1{font-size:clamp(40px,7.4vw,94px); font-weight:900; line-height:.96; letter-spacing:-.045em}
+  h1 .thin{font-weight:300; color:var(--dim)}
+  .lede{margin-top:26px; max-width:58ch; font-size:clamp(15px,1.5vw,18.5px); line-height:1.72; color:var(--dim)}
+  .lede strong{color:var(--fg); font-weight:500}
+  .meta{
+    margin-top:36px; display:flex; flex-wrap:wrap; gap:11px;
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.11em; text-transform:uppercase;
+  }
+  .meta span{border:1px solid var(--line); padding:8px 14px; border-radius:999px; color:var(--dim)}
+
+  /* 共用資料集說明條 */
+  .dataset{
+    margin-bottom:26px; padding:16px 20px; border:1px solid var(--line); border-radius:14px;
+    background:linear-gradient(180deg,rgba(59,130,246,.06),transparent);
+    display:flex; gap:22px; flex-wrap:wrap; align-items:center;
+  }
+  .dataset .t{font-size:13px; color:var(--dim); line-height:1.6; flex:1; min-width:260px}
+  .dataset .t b{color:var(--fg); font-weight:600}
+  .dataset .stats{display:flex; gap:26px; flex-wrap:wrap}
+  .dataset .stat .n{
+    font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; letter-spacing:-.02em;
+    color:var(--fg); line-height:1.1;
+  }
+  .dataset .stat .l{font-size:10.5px; color:var(--dim-2); letter-spacing:.06em; margin-top:2px}
+
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr));
+    gap:20px; padding-bottom:clamp(72px,12vh,130px);
+  }
+  .card{
+    position:relative; display:block; text-decoration:none; color:inherit;
+    background:var(--card); border:1px solid var(--line); border-radius:18px; overflow:hidden;
+    transition:transform .45s cubic-bezier(.2,.8,.2,1), border-color .45s, box-shadow .45s;
+    opacity:0; transform:translateY(26px);
+  }
+  .card.in{opacity:1; transform:none}
+  .card:hover{transform:translateY(-6px); border-color:#2c3a52; box-shadow:0 24px 56px -20px rgba(0,0,0,.85)}
+  .card:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+  /* 縮圖：純 CSS 畫出各儀表板的骨架 */
+  .thumb{height:180px; position:relative; overflow:hidden; border-bottom:1px solid var(--line)}
+  .thumb::after{content:''; position:absolute; inset:0; background:linear-gradient(to top,rgba(17,24,39,.5),transparent 58%)}
+
+  .t-dense{background:#eef0f4}
+  .t-dense i{position:absolute}
+  .t-dense i:nth-child(1){left:0; top:0; bottom:0; width:23%; background:#fff; border-right:1px solid #dcdfe6}
+  .t-dense i:nth-child(2){left:23%; right:0; top:0; height:32px; background:#fff; border-bottom:1px solid #dcdfe6}
+  .t-dense i:nth-child(3){left:27%; right:7%; top:46px; bottom:16px;
+    background:repeating-linear-gradient(180deg,#fff 0 10px,#f4f6f9 10px 20px); border:1px solid #dcdfe6}
+  .t-dense i:nth-child(4){left:27%; top:46px; bottom:16px; width:3px; background:#2563eb}
+  .t-dense i:nth-child(5){left:6%; top:18px; width:11%; height:7px; background:#2563eb; border-radius:2px;
+    box-shadow:0 17px #cdd3dd,0 34px #cdd3dd,0 51px #cdd3dd,0 68px #cdd3dd}
+
+  .t-rt{background:#0b0e14}
+  .t-rt i{position:absolute; bottom:24%; width:7px; border-radius:2px; background:#22c55e}
+  .t-rt i:nth-child(1){left:15%; height:26%}
+  .t-rt i:nth-child(2){left:25%; height:46%}
+  .t-rt i:nth-child(3){left:35%; height:34%; background:#f59e0b}
+  .t-rt i:nth-child(4){left:45%; height:58%}
+  .t-rt i:nth-child(5){left:55%; height:40%}
+  .t-rt i:nth-child(6){left:65%; height:70%; background:#ef4444}
+  .t-rt i:nth-child(7){
+    left:auto; right:14%; top:24%; bottom:auto; width:13px; height:13px; border-radius:50%;
+    background:#22c55e; box-shadow:0 0 0 0 rgba(34,197,94,.6); animation:blip 2s ease-out infinite;
+  }
+  @keyframes blip{70%,100%{box-shadow:0 0 0 19px rgba(34,197,94,0)}}
+
+  .t-fin{background:#fff}
+  .t-fin i{position:absolute; width:11px; border-radius:1.5px; background:currentColor}
+  .t-fin i::before{
+    content:''; position:absolute; left:50%; top:-10px; bottom:-10px; width:2px;
+    background:currentColor; transform:translateX(-50%);
+  }
+  .t-fin i:nth-child(1){left:13%; top:46%; height:22%; color:#e0483c}
+  .t-fin i:nth-child(2){left:27%; top:34%; height:30%; color:#1aa06d}
+  .t-fin i:nth-child(3){left:41%; top:40%; height:18%; color:#e0483c}
+  .t-fin i:nth-child(4){left:55%; top:24%; height:34%; color:#e0483c}
+  .t-fin i:nth-child(5){left:69%; top:32%; height:24%; color:#1aa06d}
+  .t-fin i:nth-child(6){left:0; right:0; top:0; height:28px; width:auto; background:#003366; border-radius:0}
+  .t-fin i:nth-child(6)::before{display:none}
+
+  .t-exec{background:#fbfbfc; display:grid; place-items:center}
+  .t-exec b{font-size:64px; font-weight:600; letter-spacing:-.05em; color:#12161d; line-height:1}
+  .t-exec i{position:absolute; width:11px; height:11px; border-radius:50%; top:26px}
+  .t-exec i:nth-child(2){left:26px; background:#22c55e; box-shadow:0 0 0 4px rgba(34,197,94,.16)}
+  .t-exec i:nth-child(3){left:46px; background:#e8eaee}
+  .t-exec i:nth-child(4){left:66px; background:#e8eaee}
+  .t-exec i:nth-child(5){
+    left:26px; right:26px; bottom:28px; top:auto; width:auto; height:24px; border-radius:0;
+    background:#e8eaee;
+    clip-path:polygon(0 78%,14% 62%,28% 70%,42% 40%,57% 52%,71% 24%,85% 33%,100% 8%,100% 100%,0 100%);
+  }
+
+  .body{padding:20px 22px 24px}
+  .num{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); letter-spacing:.16em}
+  .name{margin-top:10px; font-size:20px; font-weight:700; letter-spacing:-.02em}
+  .en{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--dim); letter-spacing:.1em;
+    text-transform:uppercase; margin-top:4px}
+  /* 每張卡回答的問題 —— 儀表板的價值在於回答問題，不在於好看 */
+  .q{
+    margin-top:14px; padding-left:11px; border-left:2px solid var(--accent);
+    font-size:13.5px; line-height:1.55; color:var(--fg); font-weight:500;
+  }
+  .desc{margin-top:12px; font-size:13.5px; line-height:1.65; color:var(--dim)}
+  .tags{margin-top:16px; display:flex; flex-wrap:wrap; gap:6px}
+  .tags em{
+    font-style:normal; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.08em;
+    padding:5px 9px; border-radius:6px; background:var(--card-2); color:#93a0b8;
+  }
+
+  footer{
+    border-top:1px solid var(--line); padding:34px 0 60px; color:var(--dim); font-size:13px;
+    display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between;
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important}
+    .card{opacity:1; transform:none}
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="glow" id="glow"></div>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow"><span class="live"></span>Operations Dashboard Suite</p>
+    <h1>4 種儀表板<br><span class="thin">同一份營運資料</span></h1>
+    <p class="lede">
+      同一間設計工作室的<strong>內部營運後台</strong>。四個儀表板共用同一份資料，
+      但各自回答一個不同的問題——從兩千筆專案的細節，到經營層一頁看完的摘要。
+      每一頁都是獨立的單一 HTML 檔案，資料即時運算、互動全部可操作。
+    </p>
+    <div class="meta">
+      <span>4 Dashboards</span><span>單檔 HTML</span><span>ECharts · 手刻 SVG</span>
+      <span>虛擬捲動 · 即時推送</span><span>Reduced-motion 友善</span>
+    </div>
+  </header>
+
+  <div class="dataset">
+    <p class="t">
+      <b>共用資料集</b>：一間台北的設計工作室，四個人一隻貓，八年做了 142 個專案。
+      四個儀表板的每一個數字都對得起來——13 的專案明細加總，等於 15 的營收，
+      也等於 16 的經營指標。
+    </p>
+    <div class="stats">
+      <div class="stat"><div class="n">2,000</div><div class="l">專案筆數</div></div>
+      <div class="stat"><div class="n">10</div><div class="l">受監控服務</div></div>
+      <div class="stat"><div class="n">24</div><div class="l">財務月份</div></div>
+      <div class="stat"><div class="n">0</div><div class="l">後端相依</div></div>
+    </div>
+  </div>
+
+  <main class="grid" id="grid">
+    <a class="card" href="13-data-dense/index.html">
+      <div class="thumb t-dense"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="body">
+        <div class="num">01</div><div class="name">高密度表格</div><div class="en">Data-Dense Dashboard</div>
+        <p class="q">「所有專案現在什麼狀況？」</p>
+        <p class="desc">2,000 筆專案，畫面上永遠只渲染看得到的那 22 列。多層篩選即時重算筆數與圖表，欄位可排序，點任一列開啟明細。</p>
+        <div class="tags"><em>虛擬捲動</em><em>多層篩選</em><em>欄位排序</em><em>CSV 匯出</em></div>
+      </div>
+    </a>
+
+    <a class="card" href="14-realtime-monitor/index.html">
+      <div class="thumb t-rt"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="body">
+        <div class="num">02</div><div class="name">即時監控</div><div class="en">Real-Time Monitoring</div>
+        <p class="q">「我們交付的網站還活著嗎？」</p>
+        <p class="desc">每秒推送一批健康檢查。事故會自己發生、從警告升級成異常、然後恢復，全程有告警通知與事件記錄。可隨時暫停推送。</p>
+        <div class="tags"><em>串流圖表</em><em>告警 Toast</em><em>事件記錄</em><em>連線狀態</em></div>
+      </div>
+    </a>
+
+    <a class="card" href="15-financial/index.html">
+      <div class="thumb t-fin"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="body">
+        <div class="num">03</div><div class="name">財務儀表板</div><div class="en">Financial Dashboard</div>
+        <p class="q">「錢從哪來、往哪去？」</p>
+        <p class="desc">現金部位月 K 線、損益瀑布圖、應收帳款帳齡表。期間可切換 6／12／24 個月，數字滾動重算，稅率算法四處共用。</p>
+        <div class="tags"><em>蠟燭圖</em><em>瀑布圖</em><em>帳齡分析</em><em>數字滾動</em></div>
+      </div>
+    </a>
+
+    <a class="card" href="16-executive/index.html">
+      <div class="thumb t-exec"><b>312</b><i></i><i></i><i></i><i></i></div>
+      <div class="body">
+        <div class="num">04</div><div class="name">經營總覽</div><div class="en">Executive Dashboard</div>
+        <p class="q">「這個月好不好？」</p>
+        <p class="desc">四個大數字、紅黃綠號誌、一句話結論，外加需要注意的三件事。零外部相依，火花線全部手刻 SVG，可直接列印帶進會議。</p>
+        <div class="tags"><em>手刻 SVG</em><em>號誌判定</em><em>期間比較</em><em>列印版面</em></div>
+      </div>
+    </a>
+  </main>
+
+  <footer>
+    <span>© 2026 STUDIO 07 零柒工作室 — 營運儀表板範例集</span>
+    <span>內容統一規格見 CONTENT.md</span>
+  </footer>
+</div>
+
+<script>
+  // 游標光暈
+  const glow = document.getElementById('glow');
+  let gx = innerWidth / 2, gy = 200, cx = gx, cy = gy;
+  addEventListener('pointermove', e => { gx = e.clientX; gy = e.clientY; }, { passive: true });
+  (function loop() {
+    cx += (gx - cx) * .08; cy += (gy - cy) * .08;
+    glow.style.transform = `translate(${cx}px,${cy}px) translate(-50%,-50%)`;
+    requestAnimationFrame(loop);
+  })();
+
+  // 卡片依序進場
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (!entry.isIntersecting) return;
+      setTimeout(() => entry.target.classList.add('in'), i * 70);
+      io.unobserve(entry.target);
+    });
+  }, { threshold: .15 });
+  document.querySelectorAll('.card').forEach(c => io.observe(c));
+</script>
+</body>
+</html>
