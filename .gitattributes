@@ -1,0 +1,30 @@
+# ---------------------------------------------------------------------
+# GitHub Linguist：語言統計應該反映「這個 repo 的應用程式碼」。
+#
+# web/public/demos/ 底下是靜態範例集——手寫的單檔 HTML 加上 Expo 匯出的
+# 成品。它們的體積（約 1.1 MB）遠大於實際的 Next.js 原始碼（約 270 KB），
+# 不排除的話 GitHub 會把這個 Next.js + TypeScript 專案標成「HTML」。
+#
+# 注意 demos-src/ 沒有被排除：那是 React Native App 的原始碼，
+# 本來就該算進語言統計裡。
+# ---------------------------------------------------------------------
+web/public/demos/**            linguist-vendored
+
+# Expo 匯出的 bundle 是機器產生的，diff 也不該展開
+web/public/demos/app/_expo/**  linguist-generated
+
+# 鎖定行尾：這個 repo 在 Windows 開發、在 Linux 上建置
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.js    text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.css   text eol=lf
+
+# 二進位檔不要做行尾轉換
+*.png   binary
+*.jpg   binary
+*.webp  binary
+*.mp4   binary
+*.webm  binary
+*.ico   binary
